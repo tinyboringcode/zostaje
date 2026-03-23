@@ -1,27 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+/* ── Design tokens — Notion light ─────────────────────────────────────────── */
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg:       #FFFFFF;
+    --surface:  #F7F6F3;
+    --surface2: #EFEEEB;
+    --border:   #E3E2DF;
+    --text-1:   #1A1A1A;
+    --text-2:   #6F6E69;
+    --text-3:   #ADACAB;
+    --green:    #0D6E4F;
+    --red:      #D44C47;
+    --amber:    #B9770E;
+
+    --font-mono: 'DM Mono', ui-monospace, 'Cascadia Code', monospace;
+    --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow:    0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+
+    /* Tailwind / shadcn / HeroUI mappings */
+    --background:             0 0% 100%;
+    --foreground:             0 0% 10%;
+    --card:                   45 10% 96%;
+    --card-foreground:        0 0% 10%;
+    --popover:                0 0% 100%;
+    --popover-foreground:     0 0% 10%;
+    --primary:                0 0% 10%;
+    --primary-foreground:     0 0% 100%;
+    --secondary:              40 8% 92%;
+    --secondary-foreground:   0 0% 20%;
+    --muted:                  40 8% 94%;
+    --muted-foreground:       40 3% 44%;
+    --accent:                 40 8% 92%;
+    --accent-foreground:      0 0% 10%;
+    --destructive:            2 60% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border:                 40 8% 88%;
+    --input:                  40 8% 90%;
+    --ring:                   0 0% 30%;
+    --radius:                 4px;
+
+    --income:   158 78% 24%;
+    --expense:    2 60% 55%;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text-1);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar       { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+/* ── Utility components ───────────────────────────────────────────────────── */
+@layer components {
+  /* Financial numbers — always monospace */
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  /* Large KPI display */
+  .num-lg {
+    font-family: var(--font-mono);
+    font-size: clamp(36px, 6vw, 60px);
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  /* Notion-style card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  /* Card with shadow (iOS/widget style) */
+  .card-raised {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  /* Vertical separator */
+  .vsep {
+    display: inline-block;
+    width: 1px;
+    height: 0.85em;
+    background: var(--border);
+    margin: 0 14px;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  /* Tag */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 7px;
+    border-radius: 2px;
+    font-size: 11px;
+    background: var(--surface2);
+    color: var(--text-2);
+    white-space: nowrap;
+    font-family: var(--font-sans);
+  }
+
+  /* Amount colors */
+  .pos    { color: var(--green); }
+  .neg    { color: var(--red); }
+  .warn   { color: var(--amber); }
+  .dim    { color: var(--text-2); }
+  .dimmer { color: var(--text-3); }
+
+  /* Legacy compat */
+  .income     { color: var(--green); }
+  .expense    { color: var(--red); }
+  .income-bg  { background: color-mix(in srgb, var(--green) 8%, transparent); }
+  .expense-bg { background: color-mix(in srgb, var(--red) 8%, transparent); }
+
+  /* Animations */
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slide-in-right {
+    from { opacity: 0; transform: translateX(16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .animate-fade-in    { animation: fade-in 150ms ease both; }
+  .animate-slide-up   { animation: slide-up 200ms ease both; }
+  .animate-slide-in-r { animation: slide-in-right 200ms ease both; }
+
+  .fade { transition: opacity 150ms, transform 150ms; }
+
+  /* TopNav link active state helper */
+  .nav-link-active {
+    color: var(--text-1) !important;
+    border-bottom: 2px solid var(--text-1) !important;
   }
 }

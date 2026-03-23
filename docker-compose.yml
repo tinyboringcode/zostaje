@@ -1,0 +1,43 @@
+services:
+  cashflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cashflow-app
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: file:/data/finance.db
+      APP_PASSWORD: ${APP_PASSWORD:-}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me}
+      NODE_ENV: production
+    volumes:
+      - cashflow-data:/data
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Uncomment below when deploying with Traefik on VPS:
+  # labels:
+  #   - "traefik.enable=true"
+  #   - "traefik.http.routers.cashflow.rule=Host(`${DOMAIN:-cashflow.localhost}`)"
+  #   - "traefik.http.routers.cashflow.entrypoints=websecure"
+  #   - "traefik.http.routers.cashflow.tls=true"
+  #   - "traefik.http.routers.cashflow.tls.certresolver=letsencrypt"
+  #   - "traefik.http.services.cashflow.loadbalancer.server.port=3000"
+  # networks:
+  #   - traefik-public
+  #   - default
+
+volumes:
+  cashflow-data:
+    driver: local
+
+# Uncomment for Traefik on VPS:
+# networks:
+#   traefik-public:
+#     external: true

@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id             String        @id @default(cuid())
+  name           String
+  color          String        @default("#6366f1")
+  emoji          String        @default("📁")
+  type           String        // "INCOME" | "EXPENSE"
+  isDefault      Boolean       @default(false)
+  isArchived     Boolean       @default(false)
+  mixedUsagePct  Int           @default(100) // 100=pełny koszt, 75=auto, 50=telefon itp.
+  createdAt      DateTime      @default(now())
+
+  transactions Transaction[]
+  budgets      Budget[]
+  rules        CategoryRule[]
+}
+
+model CategoryRule {
+  id         String   @id @default(cuid())
+  word       String
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  count      Int      @default(1)
+  txType     String   @default("EXPENSE") // INCOME | EXPENSE
+  updatedAt  DateTime @updatedAt
+
+  @@unique([word, categoryId, txType])
+}
+
+model Transaction {
+  id            String    @id @default(cuid())
+  amount        Float
+  date          DateTime
+  description   String
+  contractor    String?   // legacy text field (kept for compat)
+  type          String    // "INCOME" | "EXPENSE"
+  categoryId    String
+  contractorId  String?
+  invoiceId     String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  category      Category           @relation(fields: [categoryId], references: [id])
+  contractorRel Contractor?        @relation(fields: [contractorId], references: [id], onDelete: SetNull)
+  invoiceRel    ContractorInvoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+}
+
+model Budget {
+  id          String   @id @default(cuid())
+  categoryId  String
+  month       String   // format: YYYY-MM
+  limitAmount Float
+
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  @@unique([categoryId, month])
+}
+
+model Contractor {
+  id             String              @id @default(cuid())
+  name           String
+  companyType    String              @default("other") // JDG | SpZoo | SA | Spk | SKA | other
+  nip            String              @default("")
+  email          String              @default("")
+  phone          String              @default("")
+  phonePrefix    String              @default("+48")
+  addressStreet  String              @default("")
+  addressCity    String              @default("")
+  addressPostal  String              @default("")
+  addressCountry String              @default("PL")
+  address        String              @default("") // legacy — kept for compat
+  notes          String              @default("")
+  createdAt      DateTime            @default(now())
+
+  invoices       ContractorInvoice[]
+  transactions   Transaction[]
+}
+
+model ContractorInvoice {
+  id           String     @id @default(cuid())
+  contractorId String
+  number       String
+  amount       Float
+  issueDate    DateTime
+  dueDate      DateTime
+  paidAt       DateTime?
+  status       String     @default("pending") // pending | paid | overdue
+  notes        String     @default("")
+  createdAt    DateTime   @default(now())
+
+  contractor   Contractor   @relation(fields: [contractorId], references: [id], onDelete: Cascade)
+  transaction  Transaction?
+}
+
+model NotificationLog {
+  id        String   @id @default(cuid())
+  type      String   // budget_alert | overdue_invoice | digest | test
+  subject   String
+  sentAt    DateTime @default(now())
+  success   Boolean  @default(true)
+}
+
+model Settings {
+  id                   Int       @id @default(1)
+  companyName          String    @default("Moja Firma")
+  nip                  String    @default("")
+  taxForm              String    @default("linear")
+  isVatPayer           Boolean   @default(false)
+  address              String    @default("")
+  currency             String    @default("PLN")
+  fiscalYearStart      Int       @default(1)
+  ollamaUrl            String    @default("http://localhost:11434")
+  ollamaModel          String    @default("llama3.2")
+  ollamaEnabled        Boolean   @default(false)
+  onboardingCompleted  Boolean   @default(false)
+  // KSeF
+  ksefToken            String    @default("")
+  ksefEnvironment      String    @default("test")
+  ksefEnabled          Boolean   @default(false)
+  // Watch folder
+  watchFolderPath      String    @default("")
+  watchFolderEnabled   Boolean   @default(false)
+  // Email notifications
+  notificationEmail    String    @default("")
+  smtpHost             String    @default("")
+  smtpPort             Int       @default(587)
+  smtpUser             String    @default("")
+  smtpPass             String    @default("")
+  smtpEnabled          Boolean   @default(false)
+  budgetAlertEnabled   Boolean   @default(true)
+  budgetAlertThreshold Int       @default(80)
+  notifyInterval       String    @default("immediate") // immediate | daily | weekly
+  lastBudgetCheckAt    DateTime?
+  // Email digest
+  digestEnabled        Boolean   @default(false)
+  digestFrequency      String    @default("weekly") // daily | weekly | monthly
+  digestDays           Int       @default(7)        // lookback days for summary
+  lastDigestSentAt     DateTime?
+  // Invoice numbering
+  invoiceTemplate      String    @default("FV/{YYYY}/{NNN}")
+  invoiceCounter       Int       @default(1)
+  // Polish tax specifics
+  companyStartDate     String    @default("")      // YYYY-MM-DD — data rozpoczęcia dział.
+  zusStage             String    @default("full")  // ulga_na_start | maly_zus | maly_zus_plus | full
+  vatPeriod            String    @default("monthly") // monthly | quarterly
+  ryczaltRate          Int       @default(12)      // % stawka ryczałtu (2,3,5,8,12,14,15,17)
+}
+
+model KSeFImport {
+  id          String   @id @default(cuid())
+  ksefNumber  String   @unique
+  importedAt  DateTime @default(now())
+}
