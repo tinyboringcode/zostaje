@@ -4,17 +4,19 @@
  * ZUS stages: ulga_na_start, maly_zus, maly_zus_plus, full
  * Health insurance: varies by tax form
  *
- * Based on 2025 rates
+ * ZUS rates: see src/lib/zus-2026.ts (single source of truth)
  */
+
+import { ZUS_BASE_2026, ZUS_PREFERENCYJNY } from "@/lib/zus-2026";
 
 export type TaxForm = "tax_scale" | "linear" | "flat_rate";
 export type ZusStage = "ulga_na_start" | "maly_zus" | "maly_zus_plus" | "full";
 
-// ── 2025 ZUS bases & rates ────────────────────────────────────────────────────
-const ZUS_2025 = {
-  fullBase: 5203.80,        // 60% prognozowanego przeciętnego wynagrodzenia (8673 PLN × 60%)
-  smallBase: 1399.80,       // 30% minimalnego wynagrodzenia 2025 (4666 PLN × 30%)
-  minSalary: 4666.00,       // minimalne wynagrodzenie od 01.01.2025
+// ── 2026 ZUS bases & rates ────────────────────────────────────────────────────
+const ZUS_2026 = {
+  fullBase: ZUS_BASE_2026,  // from zus-2026.ts — single source of truth
+  smallBase: ZUS_PREFERENCYJNY.emerytalna.amount / ZUS_PREFERENCYJNY.emerytalna.rate, // ~1025.77
+  minSalary: 4300.27,       // minimalne wynagrodzenie 2026
   rates: {
     emerytalne:  0.1952,
     rentowe:     0.0800,
@@ -37,11 +39,11 @@ export function calcZusSocial(stage: ZusStage, base?: number): {
 
   const b = base ?? (
     stage === "maly_zus" || stage === "maly_zus_plus"
-      ? ZUS_2025.smallBase
-      : ZUS_2025.fullBase
+      ? ZUS_2026.smallBase
+      : ZUS_2026.fullBase
   );
 
-  const r = ZUS_2025.rates;
+  const r = ZUS_2026.rates;
   const emerytalne  = round2(b * r.emerytalne);
   const rentowe     = round2(b * r.rentowe);
   const chorobowe   = round2(b * r.chorobowe);

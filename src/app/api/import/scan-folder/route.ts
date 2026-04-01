@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/server/db";
 import { readdir, readFile, stat } from "fs/promises";
 import { join, extname, basename } from "path";
 import { parseCSV } from "@/lib/csv-parser";

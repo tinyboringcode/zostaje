@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 // ── Config ─────────────────────────────────────────────────────────────────
-const GITHUB_REPO = "boringcode/zostaje";
+const GITHUB_REPO = "tinyboringcode/zostaje";
 
 // ── Calculator constants (2026) ────────────────────────────────────────────
 const ZUS_FIXED = 1879;
@@ -22,7 +22,7 @@ function fmtDec(n: number) {
 }
 
 // ── Pixel heart ────────────────────────────────────────────────────────────
-function PixelHeart({ color = "#D44C47", size = 11 }: { color?: string; size?: number }) {
+function PixelHeart({ color = "#D44C47", size = 20 }: { color?: string; size?: number }) {
   const s = size / 11;
   return (
     <svg width={11 * s} height={10 * s} viewBox="0 0 11 10"

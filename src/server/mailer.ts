@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/server/db";
 
 export async function getTransporter() {
   const settings = await prisma.settings.findUnique({ where: { id: 1 } });

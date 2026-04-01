@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { prisma } from "@/server/db";
 
 const STOP_WORDS = new Set([
   "sp", "z", "o", "o.", "s.a", "sa", "ltd", "gmbh", "inc",

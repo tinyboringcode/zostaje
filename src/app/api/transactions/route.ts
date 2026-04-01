@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { learnFromTransaction } from "@/lib/categorizer";
+import { prisma } from "@/server/db";
+import { learnFromTransaction } from "@/server/categorizer";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;

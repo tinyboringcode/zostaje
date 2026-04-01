@@ -1,13 +1,22 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/server/db";
 import { calcZusSocial, calcHealthInsurance, calcPitAdvance, type TaxForm, type ZusStage } from "@/lib/tax-calculator";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const monthParam = searchParams.get("month");
   const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-  const yearStart = new Date(now.getFullYear(), 0, 1);
+
+  let target = now;
+  if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
+    const [y, m] = monthParam.split("-").map(Number);
+    target = new Date(y, m - 1, 1);
+  }
+
+  const monthStart = new Date(target.getFullYear(), target.getMonth(), 1);
+  const monthEnd = new Date(target.getFullYear(), target.getMonth() + 1, 0, 23, 59, 59);
+  const yearStart = new Date(target.getFullYear(), 0, 1);
 
   const [transactions, settings, contractors, budgets, categories] = await Promise.all([
     prisma.transaction.findMany({
@@ -36,7 +45,7 @@ export async function GET() {
 
   const taxForm = (settings?.taxForm ?? "linear") as TaxForm;
   const zusStage = (settings?.zusStage ?? "full") as ZusStage;
-  const monthsElapsed = now.getMonth() + 1;
+  const monthsElapsed = target.getMonth() + 1;
   const monthlyIncome = Math.max(0, (ytdRevenue - ytdCosts) / Math.max(1, monthsElapsed));
   const monthlyRevenue = ytdRevenue / Math.max(1, monthsElapsed);
   const zusSocial = calcZusSocial(zusStage);
@@ -55,7 +64,7 @@ export async function GET() {
   });
   const totalMonthlyBurden = Math.round(zusSocial.total + health + pit.advance);
 
-  // Next ZUS date
+  // Next ZUS date (always relative to real now, not target month)
   const zusDay = 20;
   const zusThisMonth = new Date(now.getFullYear(), now.getMonth(), zusDay);
   const zusDate = zusThisMonth > now ? zusThisMonth : new Date(now.getFullYear(), now.getMonth() + 1, zusDay);

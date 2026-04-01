@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/server/db";
 
 function linearRegression(y: number[]): { slope: number; r2: number } {
   const n = y.length;

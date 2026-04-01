@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { sendMail, digestHtml } from "@/lib/mailer";
+import { prisma } from "@/server/db";
+import { sendMail, digestHtml } from "@/server/mailer";
 
 export const dynamic = "force-dynamic";
 

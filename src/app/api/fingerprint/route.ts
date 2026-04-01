@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { detectAnomalies } from "@/lib/fingerprint";
-import { prisma } from "@/lib/db";
+import { detectAnomalies } from "@/server/fingerprint";
+import { prisma } from "@/server/db";
 
 export const dynamic = "force-dynamic";
 

@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/server/db";
 import { parseCSV } from "@/lib/csv-parser";
 
 export async function POST(req: NextRequest) {

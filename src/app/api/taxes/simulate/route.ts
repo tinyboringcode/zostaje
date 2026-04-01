@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { simulateAllForms, type ZusStage } from "@/lib/tax-calculator";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/server/db";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));

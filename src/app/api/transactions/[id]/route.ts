@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+import { prisma } from "@/server/db";
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   const tx = await prisma.transaction.findUnique({

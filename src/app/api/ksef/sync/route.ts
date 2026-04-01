@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { authenticate, fetchInvoices, terminateSession } from "@/lib/ksef";
+import { prisma } from "@/server/db";
+import { authenticate, fetchInvoices, terminateSession } from "@/server/ksef";
 
 export async function POST(req: NextRequest) {
   const settings = await prisma.settings.findUnique({ where: { id: 1 } });

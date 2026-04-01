@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { sendMail, budgetAlertHtml, overdueInvoiceHtml } from "@/lib/mailer";
+import { prisma } from "@/server/db";
+import { sendMail, budgetAlertHtml, overdueInvoiceHtml } from "@/server/mailer";
 
 export async function POST() {
   const settings = await prisma.settings.findUnique({ where: { id: 1 } });

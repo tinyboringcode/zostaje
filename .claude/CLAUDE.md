@@ -29,7 +29,7 @@ Aplikacja finansowa dla polskich JDG (Jednoosobowa Działalność Gospodarcza). 
 - Klasy CSS: `.glass`, `.glow-hover`, `.gradient-text`, `.animate-fade-in`, `.animate-slide-up`
 
 ### Prisma
-- Singleton klient: `import { prisma } from "@/lib/db"`
+- Singleton klient: `import { prisma } from "@/server/db"`
 - Settings to singleton o `id=1` — zawsze `findUnique({ where: { id: 1 } })`
 - Migracje: `npm run db:migrate` (dev), `npm run db:push` (szybko bez migracji)
 - **Prisma 5** — nie migruj do v7 (wymaga adaptera)
@@ -38,6 +38,8 @@ Aplikacja finansowa dla polskich JDG (Jednoosobowa Działalność Gospodarcza). 
 - Alias `@/` = `src/`
 - `cn()` z `@/lib/utils` (clsx + tailwind-merge)
 - `formatCurrency`, `formatDate`, `monthLabel` z `@/lib/formatters`
+- Kod serwerowy (Node.js/Prisma): `@/server/*`
+- Kod współdzielony (działa też w przeglądarce): `@/lib/*`
 
 ---
 
@@ -47,7 +49,8 @@ Aplikacja finansowa dla polskich JDG (Jednoosobowa Działalność Gospodarcza). 
 src/app/(app)/        # Strony z sidebarem (layout.tsx)
 src/app/api/          # REST API endpoints
 src/components/       # Komponenty UI (layout/, dashboard/, etc.)
-src/lib/              # Utilities (db, mailer, ksef, csv-parser, formatters)
+src/server/           # Kod serwerowy: db, mailer, ksef, categorizer, fingerprint
+src/lib/              # Kod współdzielony: formatters, utils, tax-calculator, csv-parser
 prisma/               # Schema, migracje, seed
 ```
 

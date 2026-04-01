@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { prisma } from "@/server/db";
 
 export interface CategoryBaseline {
   categoryId: string;

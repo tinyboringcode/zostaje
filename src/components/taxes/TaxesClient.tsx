@@ -8,6 +8,7 @@ import {
   TrendingUp, Building2, Zap, ChevronRight,
 } from "lucide-react";
 import type { AnnualSimResult } from "@/lib/tax-calculator";
+import { ZUS_SPOLECZNE_PELNY, ZUS_PREFERENCYJNY, ZUS_RATES_UPDATED } from "@/lib/zus-2026";
 
 interface TaxData {
   month: string; taxForm: string; zusStage: string; ryczaltRate: number;
@@ -112,6 +113,9 @@ export function TaxesClient() {
         <div>
           <h1 className="text-2xl font-bold gradient-text">Podatki i ZUS</h1>
           <p className="text-default-500 text-sm mt-1">Kalkulacje, zobowiązania i symulator form opodatkowania</p>
+          <span className="inline-block mt-1.5 text-xs text-default-400 border border-default-200 rounded px-2 py-0.5">
+            Składki aktualne na: {ZUS_RATES_UPDATED.replace("-", " ").replace("2026-03", "marzec 2026")}
+          </span>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Chip color={zusInfo.color} variant="flat" startContent={<Building2 className="h-3.5 w-3.5" />}>
@@ -194,34 +198,42 @@ export function TaxesClient() {
               </div>
               {data.zusStage === "ulga_na_start" ? (
                 <div className="text-sm text-success font-medium">Ulga na start — brak składek społecznych</div>
-              ) : (
-                <div className="space-y-1.5 text-sm">
-                  {[
-                    ["Emerytalne", data.zusSocial.emerytalne],
-                    ["Rentowe", data.zusSocial.rentowe],
-                    ["Chorobowe", data.zusSocial.chorobowe],
-                    ["Wypadkowe", data.zusSocial.wypadkowe],
-                    ...(data.zusSocial.fp > 0 ? [["Fundusz Pracy", data.zusSocial.fp] as [string, number]] : []),
-                  ].map(([k, v]) => (
-                    <div key={k as string} className="flex justify-between">
-                      <span className="text-default-500">{k}</span>
-                      <span className="font-medium">{formatCurrency(v as number)}</span>
+              ) : (() => {
+                const isPreferencyjny = data.zusStage === "maly_zus" || data.zusStage === "maly_zus_plus";
+                const rates = isPreferencyjny ? ZUS_PREFERENCYJNY : ZUS_SPOLECZNE_PELNY;
+                return (
+                  <div className="space-y-1.5 text-sm">
+                    {([
+                      ["Emerytalne", rates.emerytalna.amount],
+                      ["Rentowe", rates.rentowa.amount],
+                      ["Chorobowe", rates.chorobowa.amount],
+                      ["Wypadkowe", rates.wypadkowa.amount],
+                      ...(rates.funduszPracy.amount > 0 ? [["Fundusz Pracy", rates.funduszPracy.amount] as [string, number]] : []),
+                    ] as [string, number][]).map(([k, v]) => (
+                      <div key={k} className="flex justify-between">
+                        <span className="text-default-500">{k}</span>
+                        <span className="font-medium">{formatCurrency(v)}</span>
+                      </div>
+                    ))}
+                    <div className="border-t border-default-100 pt-1.5 flex justify-between font-semibold">
+                      <span>Łącznie social</span>
+                      <span>{formatCurrency(rates.total)}</span>
                     </div>
-                  ))}
-                  <div className="border-t border-default-100 pt-1.5 flex justify-between font-semibold">
-                    <span>Łącznie social</span>
-                    <span>{formatCurrency(data.zusSocial.monthly)}</span>
+                    <div className="flex justify-between text-success">
+                      <span className="text-default-500">+ Zdrowotna</span>
+                      <span className="font-semibold">{formatCurrency(data.health.monthly)}</span>
+                    </div>
+                    <div className="border-t border-default-100 pt-1.5 flex justify-between font-bold">
+                      <span>Suma ZUS</span>
+                      <span className="text-danger">{formatCurrency(rates.total + data.health.monthly)}</span>
+                    </div>
+                    <p className="text-xs text-default-400 pt-1 leading-snug">
+                      Wypadkowa: stawka domyślna 1,67% dla firm bez pracowników —{" "}
+                      <a href="https://www.zus.pl" target="_blank" rel="noopener noreferrer" className="underline">sprawdź swoją na zus.pl</a>
+                    </p>
                   </div>
-                  <div className="flex justify-between text-success">
-                    <span className="text-default-500">+ Zdrowotna</span>
-                    <span className="font-semibold">{formatCurrency(data.health.monthly)}</span>
-                  </div>
-                  <div className="border-t border-default-100 pt-1.5 flex justify-between font-bold">
-                    <span>Suma ZUS</span>
-                    <span className="text-danger">{formatCurrency(data.zusSocial.monthly + data.health.monthly)}</span>
-                  </div>
-                </div>
-              )}
+                );
+              })()}
             </CardBody>
           </Card>
 

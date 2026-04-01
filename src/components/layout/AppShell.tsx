@@ -11,15 +11,15 @@ import {
   BarChart3,
   Receipt,
   Target,
-  Activity,
-  RefreshCcw,
   Tag,
   History,
   BookOpen,
   Sparkles,
   Settings,
+  ChevronDown,
 } from "lucide-react";
 import { QuickAdd } from "@/components/quick-add/QuickAdd";
+import { PageTransition } from "./PageTransition";
 
 // ── Nav structure ──────────────────────────────────────────────────────────
 
@@ -33,9 +33,6 @@ const NAV_GROUPS: { href: string; label: string; icon: React.ElementType }[][] =
   ],
   [
     { href: "/podatki",      label: "Podatki i ZUS",      icon: Receipt },
-    { href: "/budgets",      label: "Budżety",            icon: Target },
-    { href: "/wskazniki",    label: "Wskaźniki",          icon: Activity },
-    { href: "/cykl",         label: "Cykl finansowy",     icon: RefreshCcw },
     { href: "/categories",   label: "Kategorie",          icon: Tag },
   ],
   [
@@ -43,6 +40,10 @@ const NAV_GROUPS: { href: string; label: string; icon: React.ElementType }[][] =
     { href: "/wiedza",       label: "Baza wiedzy",        icon: BookOpen },
     { href: "/ai-demo",      label: "Demo AI",            icon: Sparkles },
   ],
+];
+
+const MORE_NAV = [
+  { href: "/budgets", label: "Budżety", icon: Target },
 ];
 
 const BOTTOM_NAV = [
@@ -73,15 +74,18 @@ function NavItem({
         alignItems: "center",
         gap: 10,
         padding: "7px 10px",
-        borderRadius: 6,
+        borderRadius: 7,
         textDecoration: "none",
-        background: active ? "var(--surface2)" : "transparent",
+        background: active ? "var(--bg)" : "transparent",
         color: active ? "var(--text-1)" : "var(--text-2)",
-        transition: "background 100ms, color 100ms",
+        transition: "background 140ms ease, color 140ms ease, box-shadow 140ms ease",
         overflow: "hidden",
         whiteSpace: "nowrap",
         minWidth: 0,
         fontFamily: "var(--font-sans)",
+        boxShadow: active ? "var(--shadow-sm)" : "none",
+        fontWeight: active ? 500 : 400,
+        position: "relative",
       }}
       onMouseEnter={(e) => {
         if (!active) {
@@ -96,7 +100,7 @@ function NavItem({
         }
       }}
     >
-      <Icon size={17} style={{ flexShrink: 0 }} />
+      <Icon size={17} style={{ flexShrink: 0, opacity: active ? 1 : 0.7 }} />
       <span
         style={{
           fontSize: 14,
@@ -117,6 +121,7 @@ function NavItem({
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(true);
+  const [moreOpen, setMoreOpen] = useState(false);
   const pathname = usePathname();
 
   const isActive = (href: string) =>
@@ -238,6 +243,68 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           ))}
+
+          {/* Więcej — collapsed disclosure */}
+          <div>
+            <div style={{ height: 1, background: "var(--surface2)", margin: "10px 10px" }} />
+            <button
+              onClick={() => setMoreOpen((v) => !v)}
+              title={!open ? "Więcej" : undefined}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "7px 10px",
+                borderRadius: 6,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "var(--text-3)",
+                width: "100%",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+                fontFamily: "var(--font-sans)",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.color = "var(--text-2)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.color = "var(--text-3)";
+              }}
+            >
+              <ChevronDown
+                size={17}
+                style={{
+                  flexShrink: 0,
+                  transform: moreOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "transform 200ms ease",
+                }}
+              />
+              <span
+                style={{
+                  fontSize: 13,
+                  opacity: open ? 1 : 0,
+                  transition: "opacity 120ms ease",
+                }}
+              >
+                Więcej
+              </span>
+            </button>
+            {moreOpen && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                {MORE_NAV.map((item) => (
+                  <NavItem
+                    key={item.href}
+                    href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                    open={open}
+                    active={isActive(item.href)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* Bottom nav (Ustawienia) */}
@@ -262,8 +329,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* ── Main content ─────────────────────────────────────────────────── */}
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-        <main style={{ flex: 1, padding: "40px 32px 80px" }}>
-          {children}
+        <main style={{ flex: 1, padding: "44px 40px 80px" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+            <PageTransition>
+              {children}
+            </PageTransition>
+          </div>
         </main>
       </div>
 

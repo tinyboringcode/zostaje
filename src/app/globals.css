@@ -1,53 +1,104 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ── Design tokens — Notion light ─────────────────────────────────────────── */
+/* ── Design tokens ────────────────────────────────────────────────────────── */
 @layer base {
   :root {
-    --bg:       #FFFFFF;
-    --surface:  #F7F6F3;
-    --surface2: #EFEEEB;
-    --border:   #E3E2DF;
-    --text-1:   #1A1A1A;
-    --text-2:   #6F6E69;
-    --text-3:   #ADACAB;
-    --green:    #0D6E4F;
-    --red:      #D44C47;
-    --amber:    #B9770E;
+    /* Backgrounds — ciepła biel, nie rażąco biała */
+    --bg:       #F9F8F6;
+    --surface:  #F2F1EE;
+    --surface2: #E8E7E3;
+    --border:   #D8D7D3;
+
+    /* Text — wyraźna hierarchia */
+    --text-1:   #18170F;
+    --text-2:   #4A4944;
+    --text-3:   #8A8983;
+
+    /* Accent colors — nieco bardziej nasycone */
+    --green:    #0A6644;
+    --red:      #C8392B;
+    --amber:    #A36209;
+    --blue:     #1D5FA8;
 
     --font-mono: 'DM Mono', ui-monospace, 'Cascadia Code', monospace;
     --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
 
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-    --shadow:    0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow:    0 2px 8px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.05);
 
     /* Tailwind / shadcn / HeroUI mappings */
-    --background:             0 0% 100%;
-    --foreground:             0 0% 10%;
-    --card:                   45 10% 96%;
-    --card-foreground:        0 0% 10%;
+    --background:             45 12% 97%;
+    --foreground:             40 10% 10%;
+    --card:                   45 10% 95%;
+    --card-foreground:        40 10% 10%;
     --popover:                0 0% 100%;
-    --popover-foreground:     0 0% 10%;
-    --primary:                0 0% 10%;
+    --popover-foreground:     40 10% 10%;
+    --primary:                40 10% 10%;
     --primary-foreground:     0 0% 100%;
-    --secondary:              40 8% 92%;
+    --secondary:              40 8% 90%;
     --secondary-foreground:   0 0% 20%;
-    --muted:                  40 8% 94%;
-    --muted-foreground:       40 3% 44%;
-    --accent:                 40 8% 92%;
-    --accent-foreground:      0 0% 10%;
-    --destructive:            2 60% 55%;
+    --muted:                  40 8% 92%;
+    --muted-foreground:       40 5% 42%;
+    --accent:                 40 8% 90%;
+    --accent-foreground:      40 10% 10%;
+    --destructive:            4 65% 47%;
     --destructive-foreground: 0 0% 100%;
-    --border:                 40 8% 88%;
-    --input:                  40 8% 90%;
-    --ring:                   0 0% 30%;
-    --radius:                 4px;
+    --border:                 40 8% 85%;
+    --input:                  40 8% 88%;
+    --ring:                   40 8% 30%;
+    --radius:                 6px;
 
-    --income:   158 78% 24%;
-    --expense:    2 60% 55%;
+    --income:   158 78% 22%;
+    --expense:    4 65% 47%;
+  }
+
+  /* Dark mode */
+  .dark {
+    --bg:       #141412;
+    --surface:  #1C1B18;
+    --surface2: #252420;
+    --border:   #2E2D28;
+
+    --text-1:   #E8E7E1;
+    --text-2:   #9B9A94;
+    --text-3:   #5C5B56;
+
+    --green:    #2ECC8A;
+    --red:      #E05C52;
+    --amber:    #D4901C;
+    --blue:     #4D9FE8;
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow:    0 2px 8px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.2);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.45);
+
+    --background:             40 6% 8%;
+    --foreground:             40 6% 92%;
+    --card:                   40 6% 11%;
+    --card-foreground:        40 6% 92%;
+    --popover:                40 6% 9%;
+    --popover-foreground:     40 6% 92%;
+    --primary:                40 6% 90%;
+    --primary-foreground:     40 6% 8%;
+    --secondary:              40 6% 15%;
+    --secondary-foreground:   40 6% 80%;
+    --muted:                  40 6% 14%;
+    --muted-foreground:       40 5% 55%;
+    --accent:                 40 6% 15%;
+    --accent-foreground:      40 6% 92%;
+    --destructive:            4 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border:                 40 6% 18%;
+    --input:                  40 6% 16%;
+    --ring:                   40 6% 60%;
+
+    --income:   158 60% 42%;
+    --expense:    4 65% 55%;
   }
 }
 
@@ -62,16 +113,23 @@
     background-color: var(--bg);
     color: var(--text-1);
     font-family: var(--font-sans);
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 15px;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  ::-webkit-scrollbar       { width: 4px; height: 4px; }
+  ::-webkit-scrollbar       { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+  /* Smooth focus rings */
+  :focus-visible {
+    outline: 2px solid var(--text-2);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
 
 /* ── Utility components ───────────────────────────────────────────────────── */
@@ -96,14 +154,14 @@
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 8px;
   }
 
-  /* Card with shadow (iOS/widget style) */
+  /* Card with shadow (elevated) */
   .card-raised {
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 10px;
     box-shadow: var(--shadow);
   }
 
@@ -123,13 +181,15 @@
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    padding: 1px 7px;
-    border-radius: 2px;
-    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
     background: var(--surface2);
     color: var(--text-2);
     white-space: nowrap;
     font-family: var(--font-sans);
+    font-weight: 500;
+    border: 1px solid var(--border);
   }
 
   /* Amount colors */
@@ -142,32 +202,86 @@
   /* Legacy compat */
   .income     { color: var(--green); }
   .expense    { color: var(--red); }
-  .income-bg  { background: color-mix(in srgb, var(--green) 8%, transparent); }
-  .expense-bg { background: color-mix(in srgb, var(--red) 8%, transparent); }
+  .income-bg  { background: color-mix(in srgb, var(--green) 10%, transparent); }
+  .expense-bg { background: color-mix(in srgb, var(--red) 10%, transparent); }
 
-  /* Animations */
+  /* ── Page transition ─────────────────────────────────────────────────────── */
+  @keyframes page-enter {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes page-exit {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+  }
+
+  /* ── Element animations ──────────────────────────────────────────────────── */
   @keyframes fade-in {
     from { opacity: 0; transform: translateY(4px); }
     to   { opacity: 1; transform: translateY(0); }
   }
   @keyframes slide-up {
-    from { opacity: 0; transform: translateY(12px); }
+    from { opacity: 0; transform: translateY(14px); }
     to   { opacity: 1; transform: translateY(0); }
   }
   @keyframes slide-in-right {
     from { opacity: 0; transform: translateX(16px); }
     to   { opacity: 1; transform: translateX(0); }
   }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
 
-  .animate-fade-in    { animation: fade-in 150ms ease both; }
-  .animate-slide-up   { animation: slide-up 200ms ease both; }
-  .animate-slide-in-r { animation: slide-in-right 200ms ease both; }
+  .animate-fade-in    { animation: fade-in 180ms cubic-bezier(0.16,1,0.3,1) both; }
+  .animate-slide-up   { animation: slide-up 240ms cubic-bezier(0.16,1,0.3,1) both; }
+  .animate-slide-in-r { animation: slide-in-right 220ms cubic-bezier(0.16,1,0.3,1) both; }
+  .animate-scale-in   { animation: scale-in 180ms cubic-bezier(0.16,1,0.3,1) both; }
 
-  .fade { transition: opacity 150ms, transform 150ms; }
+  /* Stagger children */
+  .stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger > *:nth-child(2) { animation-delay: 40ms; }
+  .stagger > *:nth-child(3) { animation-delay: 80ms; }
+  .stagger > *:nth-child(4) { animation-delay: 120ms; }
+  .stagger > *:nth-child(5) { animation-delay: 160ms; }
+  .stagger > *:nth-child(6) { animation-delay: 200ms; }
+
+  .fade { transition: opacity 180ms ease, transform 180ms ease; }
 
   /* TopNav link active state helper */
   .nav-link-active {
     color: var(--text-1) !important;
     border-bottom: 2px solid var(--text-1) !important;
+  }
+
+  /* Section label / overline */
+  .label-overline {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: var(--font-sans);
+  }
+
+  /* Interactive row */
+  .row-interactive {
+    transition: background 120ms ease;
+  }
+  .row-interactive:hover {
+    background: var(--surface);
   }
 }

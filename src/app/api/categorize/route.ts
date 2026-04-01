@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { suggestCategory, learnFromTransaction } from "@/lib/categorizer";
+import { suggestCategory, learnFromTransaction } from "@/server/categorizer";
 
 export const dynamic = "force-dynamic";
 

@@ -7,7 +7,7 @@ import { CashflowChart } from "./CashflowChart";
 import { TopCategoriesPie } from "./TopCategoriesPie";
 import { AIAnalysis } from "./AIAnalysis";
 import { formatCurrency } from "@/lib/formatters";
-import { ChevronLeft, ChevronRight, Sparkles, Bell, AlertCircle, LayoutDashboard, BarChart3, Settings2, TrendingUp, TrendingDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, Bell, AlertCircle, LayoutDashboard, BarChart3, Settings2, TrendingUp, TrendingDown, Calendar, CalendarDays } from "lucide-react";
 
 interface DashboardData {
   kpi: { income: number; expense: number; profit: number; transactionCount: number };
@@ -44,10 +44,16 @@ function getGreeting(name: string) {
   return `${prefix}, ${name} 👋`;
 }
 
+type YearMonthData = Record<string, { income: number; expense: number; profit: number }>;
+
 export function DashboardClient() {
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const currentYear = now.getFullYear();
+
   const [month, setMonth] = useState(currentMonth);
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [viewMode, setViewMode] = useState<"month" | "year">("month");
   const [mode, setMode] = useState<"simple" | "pro">(() => {
     if (typeof window !== "undefined") return (localStorage.getItem("dash-mode") as "simple" | "pro") ?? "simple";
     return "simple";
@@ -61,16 +67,19 @@ export function DashboardClient() {
   });
   const [editingWidgets, setEditingWidgets] = useState(false);
 
-  useEffect(() => {
-    localStorage.setItem("dash-mode", mode);
-  }, [mode]);
-  useEffect(() => {
-    localStorage.setItem("dash-widgets", JSON.stringify(widgets));
-  }, [widgets]);
+  useEffect(() => { localStorage.setItem("dash-mode", mode); }, [mode]);
+  useEffect(() => { localStorage.setItem("dash-widgets", JSON.stringify(widgets)); }, [widgets]);
 
   const { data, isLoading } = useQuery<DashboardData>({
     queryKey: ["dashboard", month],
     queryFn: () => fetch(`/api/dashboard?month=${month}`).then((r) => r.json()),
+    enabled: viewMode === "month",
+  });
+
+  const { data: yearData, isLoading: yearLoading } = useQuery<YearMonthData>({
+    queryKey: ["reports-monthly", selectedYear],
+    queryFn: () => fetch(`/api/reports/monthly?year=${selectedYear}`).then((r) => r.json()),
+    enabled: viewMode === "year",
   });
 
   const { data: settings } = useQuery<SettingsData>({
@@ -98,20 +107,94 @@ export function DashboardClient() {
     const d = new Date(Number(year), Number(mon), 1);
     setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
   };
+  const prevYear = () => setSelectedYear((y) => y - 1);
+  const nextYear = () => setSelectedYear((y) => y + 1);
 
   const isCurrentMonth = month === currentMonth;
-  const profit = data?.kpi.profit ?? 0;
+  const isCurrentYear = selectedYear === currentYear;
+
+  // Aggregate year KPIs from monthly data
+  const yearEntries = Object.entries(yearData ?? {}).sort(([a], [b]) => a.localeCompare(b));
+  const yearKpi = yearEntries.reduce(
+    (acc, [, v]) => ({ income: acc.income + v.income, expense: acc.expense + v.expense, profit: acc.profit + v.profit, transactionCount: 0 }),
+    { income: 0, expense: 0, profit: 0, transactionCount: 0 }
+  );
+  const yearCashflow = yearEntries.map(([m, v]) => ({ month: m, income: v.income, expense: v.expense }));
+
+  const activeKpi = viewMode === "year" ? yearKpi : data?.kpi;
+  const activeIsLoading = viewMode === "year" ? yearLoading : isLoading;
+
+  const profit = activeKpi?.profit ?? 0;
   const companyName = settings?.companyName?.split(" ")[0] ?? "użytkowniku";
+
+  // Shared period navigator used in both simple and pro
+  const PeriodNav = () => (
+    <div className="flex items-center gap-1">
+      {/* View mode toggle */}
+      <div className="flex items-center gap-0.5 bg-default-100 rounded-lg p-0.5 mr-1">
+        <Tooltip content="Widok miesięczny">
+          <button
+            onClick={() => setViewMode("month")}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+              viewMode === "month"
+                ? "bg-white dark:bg-default-200 text-default-900 shadow-sm"
+                : "text-default-500 hover:text-default-700"
+            }`}
+          >
+            <CalendarDays className="h-3.5 w-3.5" />
+            Miesiąc
+          </button>
+        </Tooltip>
+        <Tooltip content="Widok roczny">
+          <button
+            onClick={() => setViewMode("year")}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+              viewMode === "year"
+                ? "bg-white dark:bg-default-200 text-default-900 shadow-sm"
+                : "text-default-500 hover:text-default-700"
+            }`}
+          >
+            <Calendar className="h-3.5 w-3.5" />
+            Rok
+          </button>
+        </Tooltip>
+      </div>
+
+      {/* Prev arrow */}
+      <Button
+        isIconOnly size="sm" variant="light"
+        onPress={viewMode === "month" ? prevMonth : prevYear}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
+
+      {/* Current period label */}
+      <span className="text-sm font-medium min-w-[130px] text-center capitalize">
+        {viewMode === "month" ? monthLabel : selectedYear}
+      </span>
+
+      {/* Next arrow — disabled at current period */}
+      <Button
+        isIconOnly size="sm" variant="light"
+        onPress={viewMode === "month" ? nextMonth : nextYear}
+        isDisabled={viewMode === "month" ? isCurrentMonth : isCurrentYear}
+      >
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
 
   // --- SIMPLE DASHBOARD ---
   if (mode === "simple") {
     return (
       <div className="space-y-5 max-w-2xl animate-fade-in">
         {/* Header */}
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-2xl font-bold">{getGreeting(companyName)}</h1>
-            <p className="text-default-500 text-sm mt-1 capitalize">{monthLabel}</p>
+            <p className="text-default-500 text-sm mt-1 capitalize">
+              {viewMode === "month" ? monthLabel : selectedYear}
+            </p>
           </div>
           <Tooltip content="Przełącz na dashboard profesjonalny">
             <Button
@@ -124,14 +207,8 @@ export function DashboardClient() {
           </Tooltip>
         </div>
 
-        {/* Month nav */}
-        <div className="flex items-center gap-2">
-          <Button isIconOnly size="sm" variant="light" onPress={prevMonth}><ChevronLeft className="h-4 w-4" /></Button>
-          <span className="text-sm font-medium min-w-[140px] text-center capitalize">{monthLabel}</span>
-          <Button isIconOnly size="sm" variant="light" onPress={nextMonth} isDisabled={isCurrentMonth}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        {/* Period nav */}
+        <PeriodNav />
 
         {/* Welcome card */}
         <Card className="glass border-0 bg-gradient-to-br from-primary/10 to-violet-500/10" shadow="none">
@@ -141,8 +218,10 @@ export function DashboardClient() {
                 <TrendingUp className="h-6 w-6 text-primary" />
               </div>
               <div className="flex-1">
-                <div className="text-xs font-semibold text-default-400 uppercase tracking-wider mb-1">Podsumowanie miesiąca</div>
-                {isLoading ? (
+                <div className="text-xs font-semibold text-default-400 uppercase tracking-wider mb-1">
+                  {viewMode === "month" ? "Podsumowanie miesiąca" : `Podsumowanie ${selectedYear}`}
+                </div>
+                {activeIsLoading ? (
                   <div className="space-y-2">
                     <div className="h-5 w-48 bg-default-100 animate-pulse rounded" />
                     <div className="h-4 w-32 bg-default-100 animate-pulse rounded" />
@@ -153,8 +232,8 @@ export function DashboardClient() {
                       {profit >= 0 ? "+" : ""}{formatCurrency(profit)}
                     </div>
                     <div className="text-sm text-default-500 mt-1">
-                      Przychody <span className="text-success font-medium">{formatCurrency(data?.kpi.income ?? 0)}</span>
-                      {" · "}Wydatki <span className="text-danger font-medium">{formatCurrency(data?.kpi.expense ?? 0)}</span>
+                      Przychody <span className="text-success font-medium">{formatCurrency(activeKpi?.income ?? 0)}</span>
+                      {" · "}Wydatki <span className="text-danger font-medium">{formatCurrency(activeKpi?.expense ?? 0)}</span>
                     </div>
                   </>
                 )}
@@ -171,8 +250,8 @@ export function DashboardClient() {
                 <TrendingUp className="h-4 w-4 text-success" />
                 <span className="text-xs text-default-500 font-medium uppercase tracking-wide">Przychody</span>
               </div>
-              {isLoading ? <div className="h-6 w-24 bg-default-100 animate-pulse rounded" /> : (
-                <div className="text-xl font-bold text-success">{formatCurrency(data?.kpi.income ?? 0)}</div>
+              {activeIsLoading ? <div className="h-6 w-24 bg-default-100 animate-pulse rounded" /> : (
+                <div className="text-xl font-bold text-success">{formatCurrency(activeKpi?.income ?? 0)}</div>
               )}
             </CardBody>
           </Card>
@@ -182,8 +261,8 @@ export function DashboardClient() {
                 <TrendingDown className="h-4 w-4 text-danger" />
                 <span className="text-xs text-default-500 font-medium uppercase tracking-wide">Wydatki</span>
               </div>
-              {isLoading ? <div className="h-6 w-24 bg-default-100 animate-pulse rounded" /> : (
-                <div className="text-xl font-bold text-danger">{formatCurrency(data?.kpi.expense ?? 0)}</div>
+              {activeIsLoading ? <div className="h-6 w-24 bg-default-100 animate-pulse rounded" /> : (
+                <div className="text-xl font-bold text-danger">{formatCurrency(activeKpi?.expense ?? 0)}</div>
               )}
             </CardBody>
           </Card>
@@ -234,7 +313,9 @@ export function DashboardClient() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold gradient-text">Dashboard Pro</h1>
-          <p className="text-default-500 text-sm mt-0.5 capitalize">{monthLabel}</p>
+          <p className="text-default-500 text-sm mt-0.5 capitalize">
+            {viewMode === "month" ? monthLabel : selectedYear}
+          </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Widget editor toggle */}
@@ -245,12 +326,8 @@ export function DashboardClient() {
           >
             {editingWidgets ? "Gotowe" : "Edytuj widżety"}
           </Button>
-          {/* Month nav */}
-          <Button isIconOnly size="sm" variant="light" onPress={prevMonth}><ChevronLeft className="h-4 w-4" /></Button>
-          <span className="text-sm font-medium min-w-[130px] text-center capitalize">{monthLabel}</span>
-          <Button isIconOnly size="sm" variant="light" onPress={nextMonth} isDisabled={isCurrentMonth}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          {/* Period nav */}
+          <PeriodNav />
           {/* Simple mode */}
           <Tooltip content="Przełącz na dashboard podstawowy">
             <Button size="sm" variant="light" startContent={<LayoutDashboard className="h-3.5 w-3.5" />} onPress={() => setMode("simple")}>
@@ -282,7 +359,7 @@ export function DashboardClient() {
       )}
 
       {/* KPI Cards */}
-      <KPICards kpi={data?.kpi} isLoading={isLoading} />
+      <KPICards kpi={activeKpi} isLoading={activeIsLoading} />
 
       {/* Overdue banner */}
       {overdueInvoices.length > 0 && (
@@ -306,10 +383,13 @@ export function DashboardClient() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {widgets.cashflow && (
             <div className="lg:col-span-2">
-              <CashflowChart data={data?.cashflow} isLoading={isLoading} />
+              <CashflowChart
+                data={viewMode === "year" ? yearCashflow : data?.cashflow}
+                isLoading={activeIsLoading}
+              />
             </div>
           )}
-          {widgets.pie && (
+          {widgets.pie && viewMode === "month" && (
             <div>
               <TopCategoriesPie data={data?.topCategories} isLoading={isLoading} />
             </div>
@@ -318,7 +398,7 @@ export function DashboardClient() {
       )}
 
       {/* AI Analysis */}
-      {widgets.ai && settings?.ollamaEnabled && <AIAnalysis month={month} />}
+      {widgets.ai && settings?.ollamaEnabled && viewMode === "month" && <AIAnalysis month={month} />}
     </div>
   );
 }
