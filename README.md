@@ -34,3 +34,13 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## ⚖️ Licencja i model biznesowy
+
+Projekt **zostaje.** jest dostępny na licencji **Functional Source License (FSL)**. Co to oznacza w praktyce?
+
+1. **Dla programistów/Self-hosterów:** Kod jest otwarty. Możesz go pobrać, postawić na własnym serwerze (np. przez Docker) i używać za darmo do zarządzania własną firmą. Możesz też wysyłać poprawki (PRy) — do czego bardzo zachęcam!
+2. **Dla "Marków":** Oferuję płatną wersję Cloud na `zostaje.pl`. Płacisz tam za to, że ja zajmuję się serwerem, backupami i gwarantuję, że algorytmy ZUS są zawsze aktualne.
+3. **Dla konkurencji:** Nie możesz wziąć mojego kodu, zmienić logo i sprzedawać go jako własny SaaS. Szanujmy swoją pracę.
+
+Dlaczego tak? Bo chcę, żeby narzędzie było transparentne (każdy może sprawdzić jak liczymy podatki), ale jednocześnie chcę, żeby projekt zarabiał na swój rozwój.
