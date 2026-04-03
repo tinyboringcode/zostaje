@@ -14,6 +14,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Camera } from "lucide-react";
+import { ReceiptScanner } from "./ReceiptScanner";
+
+const CURRENCIES = ["PLN", "EUR", "USD", "GBP", "CHF"];
 
 interface Category {
   id: string;
@@ -66,6 +70,8 @@ export function TransactionForm({ open, onClose, editTx, categories }: Props) {
   const [contractorSearch, setContractorSearch] = useState("");
   const [showContractorDropdown, setShowContractorDropdown] = useState(false);
   const contractorRef = useRef<HTMLDivElement>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [nbpLoading, setNbpLoading] = useState(false);
 
   const [form, setForm] = useState({
     type: "EXPENSE",
@@ -76,6 +82,9 @@ export function TransactionForm({ open, onClose, editTx, categories }: Props) {
     contractorId: "",
     invoiceId: "",
     categoryId: "",
+    currency: "PLN",
+    originalAmount: "",
+    currencyRate: "",
   });
 
   // Fetch contractors list
@@ -118,6 +127,9 @@ export function TransactionForm({ open, onClose, editTx, categories }: Props) {
         contractorId: editTx.contractorId ?? "",
         invoiceId: editTx.invoiceId ?? "",
         categoryId: editTx.category.id,
+        currency: "PLN",
+        originalAmount: "",
+        currencyRate: "",
       });
       setContractorSearch(ctxName);
     } else {
@@ -130,10 +142,40 @@ export function TransactionForm({ open, onClose, editTx, categories }: Props) {
         contractorId: "",
         invoiceId: "",
         categoryId: "",
+        currency: "PLN",
+        originalAmount: "",
+        currencyRate: "",
       });
       setContractorSearch("");
     }
   }, [editTx, open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const fetchNbpRate = async (currency: string, date: string) => {
+    if (currency === "PLN") return;
+    setNbpLoading(true);
+    try {
+      const res = await fetch(`/api/nbp?currency=${currency}&date=${date}`);
+      const data = await res.json();
+      if (data.rate) {
+        setForm((f) => ({ ...f, currencyRate: String(data.rate) }));
+      }
+    } catch { /* ignore */ } finally { setNbpLoading(false); }
+  };
+
+  const handleCurrencyChange = (currency: string) => {
+    setForm((f) => ({ ...f, currency }));
+    if (currency !== "PLN") fetchNbpRate(currency, form.date);
+    else setForm((f) => ({ ...f, currencyRate: "", originalAmount: "" }));
+  };
+
+  const handleScanApply = (data: { amount?: string; date?: string; description?: string }) => {
+    setForm((f) => ({
+      ...f,
+      ...(data.amount && { amount: data.amount }),
+      ...(data.date && { date: data.date }),
+      ...(data.description && { description: data.description }),
+    }));
+  };
 
   const filteredCategories = categories.filter((c) => c.type === form.type);
 
@@ -206,10 +248,25 @@ export function TransactionForm({ open, onClose, editTx, categories }: Props) {
   };
 
   return (
+    <>
+    <ReceiptScanner open={scannerOpen} onClose={() => setScannerOpen(false)} onApply={handleScanApply} />
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edytuj transakcję" : "Dodaj transakcję"}</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>{isEdit ? "Edytuj transakcję" : "Dodaj transakcję"}</DialogTitle>
+            {!isEdit && (
+              <button
+                type="button"
+                onClick={() => setScannerOpen(true)}
+                title="Skanuj paragon"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-md border hover:bg-muted transition-colors text-muted-foreground"
+              >
+                <Camera className="h-3.5 w-3.5" />
+                Skanuj paragon
+              </button>
+            )}
+          </div>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Type toggle */}
@@ -234,7 +291,7 @@ export function TransactionForm({ open, onClose, editTx, categories }: Props) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label>Kwota (PLN)</Label>
+              <Label>Kwota</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -254,6 +311,35 @@ export function TransactionForm({ open, onClose, editTx, categories }: Props) {
                 onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
               />
             </div>
+          </div>
+
+          {/* Waluta */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label>Waluta</Label>
+              <Select value={form.currency} onValueChange={handleCurrencyChange}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            {form.currency !== "PLN" && (
+              <div className="space-y-1">
+                <Label>Kurs NBP {nbpLoading ? "(pobieranie...)" : ""}</Label>
+                <Input
+                  type="number" step="0.0001" min="0"
+                  placeholder="np. 4.2841"
+                  value={form.currencyRate}
+                  onChange={(e) => setForm((f) => ({ ...f, currencyRate: e.target.value }))}
+                />
+                {form.amount && form.currencyRate && (
+                  <p className="text-xs text-muted-foreground">
+                    ≈ {(parseFloat(form.amount) * parseFloat(form.currencyRate)).toFixed(2)} PLN
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="space-y-1">
@@ -418,5 +504,6 @@ export function TransactionForm({ open, onClose, editTx, categories }: Props) {
         </form>
       </DialogContent>
     </Dialog>
+    </>
   );
 }

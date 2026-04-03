@@ -42,11 +42,14 @@ model Transaction {
   description   String
   contractor    String?   // legacy text field (kept for compat)
   type          String    // "INCOME" | "EXPENSE"
-  categoryId    String
-  contractorId  String?
-  invoiceId     String?   @unique
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  categoryId     String
+  contractorId   String?
+  invoiceId      String?   @unique
+  currency       String?               // null = PLN
+  originalAmount Float?               // kwota w oryginalnej walucie
+  currencyRate   Float?               // kurs do PLN
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   category      Category           @relation(fields: [categoryId], references: [id])
   contractorRel Contractor?        @relation(fields: [contractorId], references: [id], onDelete: SetNull)
@@ -92,12 +95,28 @@ model ContractorInvoice {
   issueDate    DateTime
   dueDate      DateTime
   paidAt       DateTime?
-  status       String     @default("pending") // pending | paid | overdue
+  status       String     @default("pending") // pending | paid | overdue | cancelled
   notes        String     @default("")
   createdAt    DateTime   @default(now())
+  // Invoice details
+  vatRate      Int        @default(23)   // % stawka VAT: 0, 5, 8, 23, -1=ZW
+  netAmount    Float      @default(0)
+  vatAmount    Float      @default(0)
+  currency     String     @default("PLN")
+  description  String     @default("")
+  template     String     @default("standard") // standard | proforma | correction
+  sentAt       DateTime?
+  ksefRef      String     @default("")
 
   contractor   Contractor   @relation(fields: [contractorId], references: [id], onDelete: Cascade)
   transaction  Transaction?
+}
+
+model LockedMonth {
+  id       String   @id @default(cuid())
+  month    String   @unique // YYYY-MM
+  lockedAt DateTime @default(now())
+  note     String   @default("")
 }
 
 model NotificationLog {
@@ -147,6 +166,11 @@ model Settings {
   // Invoice numbering
   invoiceTemplate      String    @default("FV/{YYYY}/{NNN}")
   invoiceCounter       Int       @default(1)
+  bankAccount          String    @default("")
+  // Backup
+  backupEnabled        Boolean   @default(false)
+  backupPath           String    @default("./backups")
+  backupLastAt         DateTime?
   // Polish tax specifics
   companyStartDate     String    @default("")      // YYYY-MM-DD — data rozpoczęcia dział.
   zusStage             String    @default("full")  // ulga_na_start | maly_zus | maly_zus_plus | full

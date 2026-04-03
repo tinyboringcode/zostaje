@@ -5,7 +5,7 @@ import { Tooltip } from "@heroui/react";
 import {
   LayoutDashboard, ArrowLeftRight, Tag, Target, BarChart3,
   Settings, TrendingUp, Download, Building2, Sparkles, Activity,
-  Receipt, RefreshCcw, History, BookOpen,
+  Receipt, RefreshCcw, History, BookOpen, FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTour } from "@/contexts/TourContext";
@@ -21,6 +21,7 @@ const NAV_GROUPS = [
     label: "Na co dzień",
     items: [
       { href: "/transactions", label: "Transakcje", icon: ArrowLeftRight },
+      { href: "/faktury", label: "Faktury", icon: FileText },
       { href: "/import", label: "Import", icon: Download },
       { href: "/contractors", label: "Kontrahenci", icon: Building2 },
     ],

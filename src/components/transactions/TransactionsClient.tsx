@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { TransactionForm } from "./TransactionForm";
 import { CSVImportDialog } from "./CSVImportDialog";
+import { MonthLocker } from "./MonthLocker";
 import { Pencil, Trash2, Search, ChevronUp, ChevronDown, Plus, Upload, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, startOfQuarter, startOfYear, subMonths } from "date-fns";
@@ -281,7 +282,8 @@ export function TransactionsClient() {
         <h1 style={{ margin: 0, fontFamily: "var(--font-sans)", fontSize: 18, fontWeight: 500, color: "var(--text-1)" }}>
           Transakcje
         </h1>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <MonthLocker />
           <Btn icon={<Upload size={13} />} label="Import CSV" onClick={() => setCsvOpen(true)} />
           <Btn icon={<Plus size={13} />} label="Dodaj" onClick={() => { setEditTx(null); setFormOpen(true); }} primary />
         </div>

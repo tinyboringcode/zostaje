@@ -80,15 +80,21 @@ export async function DELETE(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { amount, date, description, contractor, type, categoryId, contractorId, invoiceId } = body;
+  const { amount, date, description, contractor, type, categoryId, contractorId, invoiceId,
+    currency, originalAmount, currencyRate } = body;
 
   if (!amount || !date || !description || !type || !categoryId) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
+  // Jeśli waluta obca — kwota w PLN = originalAmount * currencyRate
+  const amountPln = currency && currency !== "PLN" && originalAmount && currencyRate
+    ? parseFloat(originalAmount) * parseFloat(currencyRate)
+    : parseFloat(amount);
+
   const transaction = await prisma.transaction.create({
     data: {
-      amount: parseFloat(amount),
+      amount: amountPln,
       date: new Date(date),
       description,
       contractor: contractor || null,
@@ -96,6 +102,9 @@ export async function POST(req: NextRequest) {
       categoryId,
       contractorId: contractorId || null,
       invoiceId: invoiceId || null,
+      currency: currency && currency !== "PLN" ? currency : null,
+      originalAmount: currency && currency !== "PLN" ? parseFloat(amount) : null,
+      currencyRate: currencyRate ? parseFloat(currencyRate) : null,
     },
     include: { category: true, contractorRel: { select: { id: true, name: true } } },
   });

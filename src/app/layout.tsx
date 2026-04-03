@@ -3,18 +3,21 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
-  title: "zostaje.",
-  description: "Finanse JDG",
+  title: "zostaje. — Finanse JDG",
+  description: "Finanse dla polskich JDG. Prosto, lokalnie, Twoje.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "zostaje.",
   },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0F0F0F",
+  themeColor: "#006FEE",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,

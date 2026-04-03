@@ -1,14 +1,47 @@
 {
-  "name": "zostaje.",
-  "short_name": "zostaje",
-  "description": "Finanse JDG",
-  "start_url": "/m/",
+  "name": "zostaje. — Finanse JDG",
+  "short_name": "zostaje.",
+  "description": "Finanse dla polskich JDG. Prosto, lokalnie, Twoje.",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#0F0F0F",
-  "theme_color": "#0F0F0F",
-  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#006FEE",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "pl",
+  "categories": ["finance", "business", "productivity"],
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dodaj transakcję",
+      "short_name": "Dodaj",
+      "url": "/transactions",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "url": "/",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Faktury",
+      "short_name": "Faktury",
+      "url": "/faktury",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }

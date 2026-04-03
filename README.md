@@ -256,6 +256,35 @@ git push origin feature/nazwa-funkcji
 
 ---
 
+## Roadmapa / TODO
+
+Otwarte zadania śledzone jako [GitHub Issues](https://github.com/tinyboringcode/zostaje/issues). Poniżej skrót tego co jest zaplanowane.
+
+### Bugs & UI
+- [ ] [#1](https://github.com/tinyboringcode/zostaje/issues/1) Wyrównanie i wyśrodkowanie elementów UI w całej aplikacji
+- [ ] [#3](https://github.com/tinyboringcode/zostaje/issues/3) Przeprojektowanie sekcji Kontrahenci — widok kart, zakładki, oś czasu aktywności
+
+### Funkcje finansowe
+- [ ] [#2](https://github.com/tinyboringcode/zostaje/issues/2) Mocny kalkulator ZUS — ulga na start, Mały ZUS, Mały ZUS Plus, pełny ZUS, składka zdrowotna per forma opodatkowania
+- [ ] Import wyciągów bankowych — MT940, OFX, formaty ING/PKO/mBank
+- [ ] Eksport JPK_V7M — pełny format XML do wysyłki do US
+- [ ] Tryb wielofirmowy — obsługa więcej niż jednej JDG
+
+### AI & Automatyzacja
+- [ ] [#5](https://github.com/tinyboringcode/zostaje/issues/5) Predykcja budżetu — prognoza wydatków na kolejny miesiąc na podstawie historii
+- [ ] Batch OCR — przetwarzanie folderu ze zdjęciami paragonów
+- [ ] Chat z danymi finansowymi — "Ile wydałem na marketing w Q1?"
+- [ ] Wykrywanie anomalii — alert gdy wydatek w kategorii odstaje od normy
+- [ ] Whisper — głosowe dodawanie transakcji
+
+### Techniczne
+- [ ] [#4](https://github.com/tinyboringcode/zostaje/issues/4) Code review — bezpieczeństwo, walidacja inputów, luki w API
+- [ ] Testy — brak pokrycia testami; E2E (Playwright) i unit (Vitest) to priorytet
+- [ ] Automatyczne backupy — cron + opcja wysyłki na S3/Backblaze
+- [ ] Rate limiting na API — zabezpieczenie przed nadmiernym użyciem
+
+---
+
 ## Licencja
 
 Copyright © 2026 [Boring Code — Rajan Bor](https://github.com/1norahc)

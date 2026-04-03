@@ -65,6 +65,17 @@ export function ReportsClient() {
     window.location.href = `/api/reports/export?year=${year}`;
   };
 
+  const handleJpkExport = () => {
+    const now = new Date();
+    const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const m = window.prompt("JPK — podaj miesiąc (YYYY-MM):", month);
+    if (m && /^\d{4}-\d{2}$/.test(m)) {
+      window.location.href = `/api/reports/jpk?month=${m}`;
+    } else if (m) {
+      alert("Nieprawidłowy format miesiąca. Użyj YYYY-MM, np. 2026-04");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -80,6 +91,10 @@ export function ReportsClient() {
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Eksport CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleJpkExport}>
+            <Download className="h-4 w-4 mr-2" />
+            Eksport JPK
           </Button>
         </div>
       </div>

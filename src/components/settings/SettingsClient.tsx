@@ -918,6 +918,9 @@ export function SettingsClient() {
         </CardContent>
       </Card>
 
+      {/* Backup */}
+      <BackupSection />
+
       {/* Help & Tour */}
       <Card>
         <CardHeader>
@@ -942,5 +945,105 @@ export function SettingsClient() {
         {mutation.isPending ? "Zapisuję..." : "Zapisz ustawienia"}
       </Button>
     </div>
+  );
+}
+
+// ──────────────────────────────────────────
+// Backup Section (self-contained component)
+// ──────────────────────────────────────────
+function BackupSection() {
+  const [backupPath, setBackupPath] = useState("./backups");
+  const [lastBackup, setLastBackup] = useState<string | null>(null);
+  const [dbSize, setDbSize] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  const loadStatus = async () => {
+    try {
+      const res = await fetch("/api/backup");
+      const data = await res.json();
+      setBackupPath(data.backupPath ?? "./backups");
+      setLastBackup(data.lastBackupAt);
+      setDbSize(data.dbSizeBytes ?? 0);
+    } catch { /* ignore */ }
+  };
+
+  useEffect(() => { loadStatus(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const doBackup = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/backup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        toast.success(`Backup wykonany (${(data.sizeBytes / 1024).toFixed(0)} KB)`);
+        loadStatus();
+      } else {
+        toast.error(data.error ?? "Backup nieudany");
+      }
+    } catch {
+      toast.error("Nie udało się wykonać backupu");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveBackupPath = async () => {
+    await fetch("/api/backup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ settings: { path: backupPath } }),
+    });
+    toast.success("Ścieżka backupu zapisana");
+  };
+
+  const fmtSize = (bytes: number) => bytes < 1024 * 1024
+    ? `${(bytes / 1024).toFixed(0)} KB`
+    : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          💾 Backup danych
+        </CardTitle>
+        <CardDescription>
+          Kopia pliku bazy danych SQLite. Faktury VAT należy przechowywać 5 lat.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-3 text-sm text-muted-foreground flex-wrap">
+          <span>Rozmiar bazy: <strong className="text-foreground">{fmtSize(dbSize)}</strong></span>
+          {lastBackup && (
+            <span>Ostatni backup: <strong className="text-foreground">
+              {new Intl.DateTimeFormat("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(lastBackup))}
+            </strong></span>
+          )}
+          {!lastBackup && <span className="text-amber-600">Brak backupu — wykonaj pierwszy teraz</span>}
+        </div>
+
+        <div className="flex gap-2 items-end">
+          <div className="flex-1 space-y-1">
+            <Label>Katalog backupów</Label>
+            <Input
+              value={backupPath}
+              onChange={(e) => setBackupPath(e.target.value)}
+              placeholder="./backups"
+            />
+            <p className="text-xs text-muted-foreground">Ścieżka względna (od katalogu projektu) lub absolutna</p>
+          </div>
+          <Button variant="outline" onClick={saveBackupPath}>Zapisz ścieżkę</Button>
+        </div>
+
+        <div className="flex gap-3">
+          <Button onClick={doBackup} disabled={loading}>
+            {loading ? "Tworzę backup..." : "💾 Wykonaj backup teraz"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
