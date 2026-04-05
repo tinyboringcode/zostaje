@@ -5,10 +5,11 @@ import { Tooltip } from "@heroui/react";
 import {
   LayoutDashboard, ArrowLeftRight, Tag, Target, BarChart3,
   Settings, TrendingUp, Download, Building2, Sparkles, Activity,
-  Receipt, RefreshCcw, History, BookOpen, FileText,
+  Receipt, RefreshCcw, History, BookOpen, FileText, FolderKanban, Wand2, Share2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTour } from "@/contexts/TourContext";
+import { SyncStatusIndicator } from "@/components/sync/SyncStatusIndicator";
 
 const NAV_GROUPS = [
   {
@@ -24,6 +25,8 @@ const NAV_GROUPS = [
       { href: "/faktury", label: "Faktury", icon: FileText },
       { href: "/import", label: "Import", icon: Download },
       { href: "/contractors", label: "Kontrahenci", icon: Building2 },
+      { href: "/graph", label: "Graf", icon: Share2 },
+      { href: "/projects", label: "Projekty", icon: FolderKanban },
     ],
   },
   {
@@ -48,6 +51,7 @@ const NAV_GROUPS = [
     items: [
       { href: "/historia", label: "Historia finansowa", icon: History },
       { href: "/wiedza", label: "Baza wiedzy", icon: BookOpen },
+      { href: "/rules", label: "Reguły", icon: Wand2 },
       { href: "/settings", label: "Ustawienia", icon: Settings },
     ],
   },
@@ -107,6 +111,12 @@ export function Sidebar() {
           </div>
         ))}
       </nav>
+
+      {/* Footer: sync status + version */}
+      <div className="mt-auto border-t border-white/10 px-2 py-2 space-y-1">
+        <SyncStatusIndicator />
+        <div className="text-[10px] text-muted-foreground px-2">v0.1.0 · local-first</div>
+      </div>
     </aside>
   );
 }

@@ -4,6 +4,8 @@
   "description": "Finanse dla polskich JDG. Prosto, lokalnie, Twoje.",
   "start_url": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui", "browser"],
+  "launch_handler": { "client_mode": "focus-existing" },
   "background_color": "#0a0a0a",
   "theme_color": "#006FEE",
   "orientation": "portrait-primary",

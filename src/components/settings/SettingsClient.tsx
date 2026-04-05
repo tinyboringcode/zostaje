@@ -10,6 +10,9 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Sparkles, Building2, Settings2, ExternalLink, Zap, FolderOpen, Bell, RefreshCw, CheckCircle2, Mail, FileText, Receipt, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { VaultSettingsSection } from "@/components/vault/VaultSettingsSection";
+import { PluginsSection } from "@/components/vault/PluginsSection";
+import { AppInstallSection } from "@/components/pwa/AppInstallSection";
 
 const TAX_FORMS = [
   { value: "flat_rate", label: "Ryczałt" },
@@ -920,6 +923,15 @@ export function SettingsClient() {
 
       {/* Backup */}
       <BackupSection />
+
+      {/* Skarbiec lokalny — eksport / import / historia */}
+      <VaultSettingsSection />
+
+      {/* Pluginy */}
+      <PluginsSection />
+
+      {/* Aplikacja — PWA install */}
+      <AppInstallSection />
 
       {/* Help & Tour */}
       <Card>

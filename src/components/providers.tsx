@@ -3,6 +3,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HeroUIProvider } from "@heroui/react";
 import { Toaster } from "sonner";
 import { useState } from "react";
+import { VaultProvider } from "@/components/vault/VaultProvider";
+import { CommandPalette } from "@/components/vault/CommandPalette";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -15,7 +18,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <HeroUIProvider>
-        {children}
+        <VaultProvider>
+          {children}
+          <CommandPalette />
+          <InstallPrompt />
+        </VaultProvider>
         <Toaster
           richColors
           position="top-right"

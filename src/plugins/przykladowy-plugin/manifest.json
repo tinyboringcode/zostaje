@@ -1,0 +1,9 @@
+{
+  "id": "community.przyklad",
+  "name": "Przykładowy plugin",
+  "version": "0.1.0",
+  "author": "zostaje team",
+  "description": "Liczy transakcje oznaczone tagiem #duża-transakcja i loguje sumę po każdym zapisie.",
+  "hooks": ["transaction:after-save"],
+  "permissions": ["read:transactions"]
+}

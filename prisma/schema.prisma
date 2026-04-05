@@ -183,3 +183,16 @@ model KSeFImport {
   ksefNumber  String   @unique
   importedAt  DateTime @default(now())
 }
+
+// Phase 3: E2E encrypted sync. `blob` is ciphertext produced on the client
+// with the user's vault key — the server never sees plaintext.
+model SyncBlob {
+  id        Int      @id @default(autoincrement())
+  userId    String   // for a single-user JDG instance this is "default"
+  deviceId  String
+  blob      String   // base64 ciphertext (AES-GCM)
+  version   Int
+  createdAt DateTime @default(now())
+
+  @@index([userId, version])
+}

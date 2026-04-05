@@ -1,6 +1,7 @@
 # CashFlow JDG — Dokumentacja techniczna
 
 ## Spis treści
+0. [Skarbiec lokalny (local-first)](#0-skarbiec-lokalny-local-first)
 1. [Uruchomienie lokalne](#1-uruchomienie-lokalne)
 2. [Struktura projektu](#2-struktura-projektu)
 3. [Baza danych — modele Prisma](#3-baza-danych--modele-prisma)
@@ -12,6 +13,116 @@
 9. [Zmienne środowiskowe](#9-zmienne-środowiskowe)
 10. [Komendy developerskie](#10-komendy-developerskie)
 11. [Architektura decyzyjna](#11-architektura-decyzyjna)
+
+---
+
+## 0. Skarbiec lokalny (local-first)
+
+Aplikacja przechodzi na architekturę **local-first**. Wszystkie nowe dane użytkownika trafiają do zaszyfrowanego skarbca IndexedDB, zamiast do bazy SQLite serwera.
+
+### Warstwy
+
+```
+UI komponenty
+   │
+   ▼
+src/lib/storage.ts   ← publiczne API (getAll/getById/add/update/remove)
+   │
+   ├──► src/lib/crypto.ts     (AES-GCM + PBKDF2, Web Crypto API)
+   ├──► src/lib/keystore.ts   (klucz sesji w pamięci modułu)
+   ├──► src/lib/audit.ts      (szyfrowany log zmian)
+   └──► src/lib/db.ts         (IndexedDB przez idb)
+```
+
+### Kluczowe zasady
+
+- **Tylko `storage.ts`** jest dozwolonym punktem wejścia do danych. Nie importuj `db.ts` bezpośrednio w kodzie domenowym.
+- **Klucz AES** żyje wyłącznie w zmiennej modułu `keystore.ts`. Nigdy nie trafia do localStorage/sessionStorage/IndexedDB/cookies.
+- **Sól PBKDF2** jest zapisywana w localStorage (nie jest sekretem). Token weryfikacyjny w `meta` store pozwala sprawdzić poprawność hasła przy odblokowaniu.
+- **Nie ma odzyskiwania hasła.** Utrata hasła = utrata danych. Z definicji.
+- **Auto-lock** po 30 minutach bezczynności (`VaultProvider`).
+
+### Stores IndexedDB (`zostaje-db`)
+
+| Store | Zawartość |
+|-------|-----------|
+| `transactions` | Zaszyfrowane transakcje |
+| `kontrahenci` | Zaszyfrowani kontrahenci |
+| `settings` | Zaszyfrowane ustawienia użytkownika |
+| `audit_log` | Zaszyfrowane wpisy historii zmian |
+| `meta` | Token weryfikacyjny, wersja schematu (plaintext, nie-tajne) |
+
+### Eksport / import
+
+- **`Eksport JSON (odszyfrowany)`** — czytelny backup, np. do integracji lub migracji.
+- **`Eksport zaszyfrowany .zostaje`** — envelope `{ version, app, exported_at, salt, data }`, gdzie `salt` jest świeży dla każdego eksportu, a `data` to base64 AES-GCM. Plik jest niezależny od urządzenia.
+- **Import** — scalanie (merge) lub nadpisywanie (replace).
+
+### Paleta komend
+
+`Cmd/Ctrl+K` lub `/` (poza inputami) otwiera `CommandPalette`. Komendy: nawigacja, szybkie dodawanie, eksport, `Zablokuj skarbiec`.
+
+### Zewnętrzne zależności
+
+| Pakiet | Rola |
+|--------|------|
+| `idb` | Typowany wrapper IndexedDB |
+| `cmdk` | Paleta komend |
+
+Szyfrowanie nie ma żadnej zewnętrznej zależności — wyłącznie Web Crypto API.
+
+### Silnik reguł (`src/lib/rules.ts`)
+
+Czyste funkcje — nigdy nie mutują inputu, łatwe do testów.
+
+```
+applyRules(draft, rules, { onMatch }) → nowy draft
+```
+
+- Reguły sortowane po `priority` (niższa = wcześniej).
+- Pierwsza dopasowana wygrywa. `rule.cascade = true` pozwala kolejnym regułom także zadziałać.
+- Operatory: `contains`, `starts_with`, `equals`, `gt`, `lt`.
+- Pola: `description`, `amount`, `kontrahent_id`, `type`.
+- Akcje: `set_category`, `set_kontrahent`, `set_type`, `add_tag`.
+- Starter rules (seed przy pierwszym odblokowaniu):
+  1. `description contains "ZUS"` → `type: wydatek`, `category: ZUS`
+  2. `description contains "urząd skarbowy"` → `category: Podatki`
+  3. `amount > 10000` → `add_tag: duża-transakcja`
+
+UI: `/rules` (`RulesClient.tsx`) — lista, toggle, edytor z live preview „dopasuje X transakcji".
+
+### Projekty (`src/lib/projects.ts`)
+
+```
+type Project = { name, kontrahent_id?, status, color?, created_at, description? }
+```
+
+Transakcje linkują się przez `transaction.project_id`. Routy:
+- `/projects` — lista z podsumowaniem (przychody/wydatki/wynik).
+- `/projects/[id]` — szczegóły + powiązane transakcje + zmiana statusu + usuwanie (transakcje są odłączane, nie kasowane).
+
+### Plugin hook system (`src/lib/plugins.ts`)
+
+Minimalna architektura — brak marketplace, brak sandbox, brak permission modelu. Pluginy to zaufany kod dostarczany z aplikacją.
+
+Hooki:
+| Hook | Payload | Zastosowanie |
+|------|---------|--------------|
+| `transaction:before-save` | `{ phase, id, draft, previous }` | transform draft (np. reguły) |
+| `transaction:after-save` | j.w. | side effects (np. audit) |
+| `transaction:before-delete` | `{ id, previous }` | audit, cleanup |
+| `import:after-csv` | batch payload | post-processing importu |
+| `report:render` | raport | customizacja raportów |
+
+**Izolacja błędów:** każdy handler w try/catch. Wyjątek z pluginu jest logowany (`console.error` lub własny logger przez `setPluginErrorLogger`) i pipeline kontynuuje z poprzednim payloadem. Plugin nigdy nie łamie hosta.
+
+**Core pluginy** (`src/plugins/`):
+- `rules-plugin` — `transaction:before-save`, uruchamia silnik reguł.
+- `audit-plugin` — `transaction:after-save` + `transaction:before-delete`, pisze audit log.
+
+Bootstrap: `bootstrapPlugins()` wywoływany w `VaultProvider` po odblokowaniu skarbca. Idempotentny.
+
+**UI:** `Ustawienia → Pluginy` — lista pluginów, wersje, hooki, toggle (z ostrzeżeniem dla core). Placeholder: „API dla zewnętrznych pluginów — wkrótce".
 
 ---
 
