@@ -25,7 +25,7 @@ import { PageTransition } from "./PageTransition";
 
 const NAV_GROUPS: { href: string; label: string; icon: React.ElementType }[][] = [
   [
-    { href: "/",             label: "Przegląd",          icon: LayoutDashboard },
+    { href: "/dashboard",    label: "Przegląd",          icon: LayoutDashboard },
     { href: "/transactions", label: "Transakcje",         icon: ArrowLeftRight },
     { href: "/contractors",  label: "Kontrahenci",        icon: Building2 },
     { href: "/import",       label: "Import",             icon: Download },
@@ -125,7 +125,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+    pathname.startsWith(href);
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)" }}>
@@ -188,7 +188,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <PanelLeft size={17} />
           </button>
           <Link
-            href="/"
+            href="/dashboard"
             style={{
               fontFamily: "var(--font-mono)",
               fontSize: 15,

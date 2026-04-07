@@ -55,7 +55,7 @@ export default function OnboardingPage() {
       });
       if (!res.ok) throw new Error("Błąd zapisu");
     },
-    onSuccess: () => router.push("/"),
+    onSuccess: () => router.push("/dashboard"),
     onError: () => toast.error("Nie udało się zapisać — spróbuj ponownie"),
   });
 

@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 
 const PRIMARY_LINKS = [
-  { href: "/",             label: "Przegląd"     },
+  { href: "/dashboard",    label: "Przegląd"     },
   { href: "/transactions", label: "Transakcje"   },
   { href: "/podatki",      label: "Podatki"      },
   { href: "/contractors",  label: "Kontrahenci"  },
@@ -30,7 +30,7 @@ export function TopNav() {
   const moreRef = useRef<HTMLDivElement>(null);
 
   const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+    pathname.startsWith(href);
 
   const moreIsActive = MORE_LINKS.some((l) => isActive(l.href));
 
@@ -61,7 +61,7 @@ export function TopNav() {
     >
       {/* Brand */}
       <Link
-        href="/"
+        href="/dashboard"
         style={{
           fontFamily: "var(--font-mono)",
           fontSize: 15,

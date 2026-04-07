@@ -15,7 +15,7 @@ const NAV_GROUPS = [
   {
     label: null, // no header for first group
     items: [
-      { href: "/", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     ],
   },
   {
@@ -86,7 +86,7 @@ export function Sidebar() {
             <div className="space-y-0.5">
               {group.items.map((item) => {
                 const Icon = item.icon;
-                const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+                const active = pathname.startsWith(item.href);
                 const tourHighlight = !active && activeHref === item.href;
                 return (
                   <Tooltip key={item.href} content={item.label} placement="right" className="md:hidden">

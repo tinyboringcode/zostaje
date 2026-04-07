@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/", label: "Dashboard" },
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/transactions", label: "Transakcje" },
   { href: "/import", label: "Import" },
   { href: "/contractors", label: "Kontrahenci" },
@@ -45,7 +45,7 @@ export function Header() {
       {mobileOpen && (
         <nav className="border-t px-4 py-2 space-y-1">
           {navItems.map((item) => {
-            const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+            const active = pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}
