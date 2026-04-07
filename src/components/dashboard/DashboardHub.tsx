@@ -113,7 +113,6 @@ export function DashboardHub() {
   const monthLabel = new Intl.DateTimeFormat("pl-PL", { month: "long", year: "numeric" })
     .format(new Date(selYear, selMon - 1, 1));
 
-  const clockTime = tick.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const clockDate = tick.toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   // ── Data queries ────────────────────────────────────────────────────────
@@ -255,58 +254,133 @@ export function DashboardHub() {
     <>
       <IntroScreen />
 
-      <div style={{ maxWidth: 760, display: "flex", flexDirection: "column", gap: 32 }}>
+      <div style={{ maxWidth: 760, display: "flex", flexDirection: "column", gap: 48 }}>
 
-        {/* ── Header: date/time + period nav ─────────────────────────────── */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-          {/* Live clock */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        {/* ── Hero section ─────────────────────────────────────────────────── */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+
+          {/* Top bar: date (left) + period nav (right) */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 36 }}>
             <span style={{
-              fontFamily: "var(--font-mono)", fontSize: 30, fontWeight: 400,
-              letterSpacing: "-0.04em", color: "var(--text-1)", lineHeight: 1,
+              fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--text-3)",
+              textTransform: "capitalize", letterSpacing: "0.01em",
             }}>
-              {clockTime}
-            </span>
-            <span style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--text-2)", textTransform: "capitalize", letterSpacing: "0.01em" }}>
               {clockDate}
+            </span>
+            <PeriodNav />
+          </div>
+
+          {/* Headline: ogromna kwota */}
+          <div style={{ marginBottom: 10 }}>
+            <span style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "clamp(64px, 10vw, 96px)",
+              fontWeight: 700,
+              letterSpacing: "-0.03em",
+              lineHeight: 1,
+              color: netColor,
+              display: "block",
+            }}>
+              {netAfterTax !== 0 && (netAfterTax > 0 ? "+" : "−")}
+              <CountUp
+                end={Math.abs(netAfterTax)}
+                duration={1.2}
+                decimals={2}
+                decimal=","
+                separator=" "
+                suffix=" zł"
+                useEasing
+                preserveValue
+              />
             </span>
           </div>
 
-          {/* Period navigation */}
-          <PeriodNav />
-        </div>
-
-        {/* ── Main KPI ─────────────────────────────────────────────────────── */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "clamp(52px, 8vw, 76px)", fontWeight: 400, letterSpacing: "-0.03em", lineHeight: 1, color: netColor }}>
-            {netAfterTax !== 0 && (netAfterTax > 0 ? "+" : "−")}
-            <CountUp end={Math.abs(netAfterTax)} duration={1.2} decimals={2} decimal="," separator=" " suffix=" zł" useEasing preserveValue />
-          </span>
-          <span style={{ fontSize: 14, color: "var(--text-3)", fontFamily: "var(--font-sans)" }}>
+          {/* Subtytuł */}
+          <p style={{
+            margin: "0 0 20px",
+            fontSize: 18,
+            color: "var(--text-2)",
+            fontFamily: "var(--font-sans)",
+            fontWeight: 400,
+            lineHeight: 1.4,
+          }}>
             {viewMode === "month" ? "zostaje po podatkach i ZUS" : `suma za ${selectedYear}`}
-          </span>
-          {/* Breakdown */}
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 4 }}>
-            <span style={{ fontSize: 13, fontFamily: "var(--font-sans)", color: "var(--text-3)" }}>
-              <span style={{ color: "var(--green)", fontFamily: "var(--font-mono)", fontSize: 14 }}>
+          </p>
+
+          {/* Breakdown inline */}
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginBottom: 28 }}>
+            <span style={{ fontSize: 14, fontFamily: "var(--font-sans)", color: "var(--text-3)" }}>
+              <span style={{ color: "var(--green)", fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 600 }}>
                 +{income.toLocaleString("pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </span>
               {" "}przychody
             </span>
-            <span style={{ fontSize: 13, fontFamily: "var(--font-sans)", color: "var(--text-3)" }}>
-              <span style={{ color: "var(--red)", fontFamily: "var(--font-mono)", fontSize: 14 }}>
+            <span style={{ fontSize: 14, fontFamily: "var(--font-sans)", color: "var(--text-3)" }}>
+              <span style={{ color: "var(--red)", fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 600 }}>
                 −{expense.toLocaleString("pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </span>
               {" "}wydatki
             </span>
             {viewMode === "month" && burden > 0 && (
-              <span style={{ fontSize: 13, fontFamily: "var(--font-sans)", color: "var(--text-3)" }}>
-                <span style={{ color: "var(--amber)", fontFamily: "var(--font-mono)", fontSize: 14 }}>
+              <span style={{ fontSize: 14, fontFamily: "var(--font-sans)", color: "var(--text-3)" }}>
+                <span style={{ color: "var(--amber)", fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 600 }}>
                   −{burden.toLocaleString("pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </span>
                 {" "}ZUS+PIT
               </span>
             )}
+          </div>
+
+          {/* CTA row */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <Link
+              href="/transactions"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "12px 24px",
+                background: "#7c3aed",
+                color: "#ffffff",
+                borderRadius: 8,
+                fontFamily: "var(--font-sans)",
+                fontSize: 15,
+                fontWeight: 600,
+                textDecoration: "none",
+                border: "none",
+                letterSpacing: "0.01em",
+                transition: "background 150ms ease, transform 150ms ease",
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.background = "#6d28d9";
+                el.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.background = "#7c3aed";
+                el.style.transform = "translateY(0)";
+              }}
+            >
+              Dodaj transakcję
+            </Link>
+            <Link
+              href="/transactions"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "12px 16px",
+                color: "var(--text-2)",
+                fontFamily: "var(--font-sans)",
+                fontSize: 15,
+                fontWeight: 500,
+                textDecoration: "none",
+                transition: "color 150ms ease",
+              }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-1)")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-2)")}
+            >
+              Wszystkie transakcje →
+            </Link>
           </div>
         </div>
 
@@ -329,6 +403,29 @@ export function DashboardHub() {
             </div>
           ))}
         </div>
+
+        {/* ── Alert bar ────────────────────────────────────────────────────── */}
+        {hasAlert && (
+          <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "11px 16px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 14, fontFamily: "var(--font-sans)", flexWrap: "wrap" }}>
+            {overdueCount > 0 && (
+              <Link href="/contractors" style={{ color: "var(--red)", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--red)", display: "inline-block", flexShrink: 0 }} />
+                {overdueCount} {overdueCount === 1 ? "faktura po terminie" : "faktury po terminie"}
+                {overdueAmount > 0 && (
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>
+                    — {overdueAmount.toLocaleString("pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} zł
+                  </span>
+                )}
+              </Link>
+            )}
+            {daysToZus <= 5 && (
+              <Link href="/podatki" style={{ color: "var(--amber)", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--amber)", display: "inline-block", flexShrink: 0 }} />
+                ZUS za {daysToZus} {daysToZus === 1 ? "dzień" : "dni"} — {burden.toLocaleString("pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} zł
+              </Link>
+            )}
+          </div>
+        )}
 
         {/* ── Year: monthly breakdown table ─────────────────────────────────── */}
         {viewMode === "year" && yearEntries.length > 0 && (
@@ -364,29 +461,6 @@ export function DashboardHub() {
                 );
               })}
             </div>
-          </div>
-        )}
-
-        {/* ── Alert bar ────────────────────────────────────────────────────── */}
-        {hasAlert && (
-          <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "11px 16px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 14, fontFamily: "var(--font-sans)", flexWrap: "wrap" }}>
-            {overdueCount > 0 && (
-              <Link href="/contractors" style={{ color: "var(--red)", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--red)", display: "inline-block", flexShrink: 0 }} />
-                {overdueCount} {overdueCount === 1 ? "faktura po terminie" : "faktury po terminie"}
-                {overdueAmount > 0 && (
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>
-                    — {overdueAmount.toLocaleString("pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} zł
-                  </span>
-                )}
-              </Link>
-            )}
-            {daysToZus <= 5 && (
-              <Link href="/podatki" style={{ color: "var(--amber)", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--amber)", display: "inline-block", flexShrink: 0 }} />
-                ZUS za {daysToZus} {daysToZus === 1 ? "dzień" : "dni"} — {burden.toLocaleString("pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} zł
-              </Link>
-            )}
           </div>
         )}
 
@@ -438,40 +512,40 @@ export function DashboardHub() {
             </p>
           </div>
           <div>
-          {transactions.map((tx, i) => {
-            const isIncome = tx.type === "INCOME";
-            const isLast = i === transactions.length - 1;
-            return (
-              <div
-                key={tx.id}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "52px 1fr auto auto",
-                  gap: 14,
-                  alignItems: "center",
-                  minHeight: 50,
-                  padding: "0 20px",
-                  borderBottom: isLast ? "none" : "1px solid var(--border)",
-                  transition: "background 120ms ease",
-                }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--surface)")}
-                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
-              >
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-3)" }}>
-                  {formatTxDate(tx.date)}
-                </span>
-                <span style={{ fontSize: 14, color: "var(--text-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {tx.description}
-                </span>
-                <span className="tag">
-                  {tx.category.emoji} {tx.category.name}
-                </span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: isIncome ? "var(--green)" : "var(--red)", whiteSpace: "nowrap", fontWeight: 500 }}>
-                  {isIncome ? "+" : "−"}{Math.abs(tx.amount).toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
-                </span>
-              </div>
-            );
-          })}
+            {transactions.map((tx, i) => {
+              const isIncome = tx.type === "INCOME";
+              const isLast = i === transactions.length - 1;
+              return (
+                <div
+                  key={tx.id}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "52px 1fr auto auto",
+                    gap: 14,
+                    alignItems: "center",
+                    minHeight: 50,
+                    padding: "0 20px",
+                    borderBottom: isLast ? "none" : "1px solid var(--border)",
+                    transition: "background 120ms ease",
+                  }}
+                  onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--surface)")}
+                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+                >
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-3)" }}>
+                    {formatTxDate(tx.date)}
+                  </span>
+                  <span style={{ fontSize: 14, color: "var(--text-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {tx.description}
+                  </span>
+                  <span className="tag">
+                    {tx.category.emoji} {tx.category.name}
+                  </span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: isIncome ? "var(--green)" : "var(--red)", whiteSpace: "nowrap", fontWeight: 500 }}>
+                    {isIncome ? "+" : "−"}{Math.abs(tx.amount).toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
+                  </span>
+                </div>
+              );
+            })}
           </div>
           <div style={{ padding: "12px 20px", borderTop: transactions.length > 0 ? "none" : undefined }}>
             <Link
