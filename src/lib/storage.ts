@@ -134,7 +134,7 @@ export async function add<T>(
     });
   } else {
     // Non-transaction entities: no hook surface yet — log directly.
-    await logChange("create", entity as any, id, null, finalData);
+    await logChange("create", entity, id, null, finalData);
   }
 
   return { id, updatedAt, data: finalData };
@@ -176,7 +176,7 @@ export async function update<T>(
       previous: existing.data as unknown as TransactionDraft,
     });
   } else {
-    await logChange("update", entity as any, id, existing.data, next);
+    await logChange("update", entity, id, existing.data, next);
   }
 
   return { id, updatedAt, data: next };
@@ -196,7 +196,7 @@ export async function remove(entity: EntityType, id: string): Promise<void> {
   await db.remove(ENTITY_TO_STORE[entity], id);
 
   if (entity !== "transaction") {
-    await logChange("delete", entity as any, id, existing?.data ?? null, null);
+    await logChange("delete", entity, id, existing?.data ?? null, null);
   }
 }
 
@@ -237,7 +237,7 @@ export async function mergeAll(snap: PlainSnapshot): Promise<void> {
   const merge = async (entity: EntityType, items: StoredEntity[]) => {
     for (const it of items) {
       const existing = await getById(entity, it.id);
-      if (existing) await update(entity, it.id, it.data as any);
+      if (existing) await update(entity, it.id, it.data as never);
       else await add(entity, it.data, { id: it.id });
     }
   };

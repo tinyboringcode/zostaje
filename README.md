@@ -1,148 +1,262 @@
 <div align="center">
 
 ```
- ______     ______     ______     ______   ______     __     ______    
-/\___  \   /\  __ \   /\  ___\   /\__  _\ /\  __ \   /\ \   /\  ___\   
-\/_/  /__  \ \ \/\ \  \ \___  \  \/_/\ \/ \ \  __ \  \ \ \  \ \  __\   
-  /\_____\  \ \_____\  \/\_____\    \ \_\  \ \_\ \_\  \ \_\  \ \_____\ 
-  \/_____/   \/_____/   \/_____/     \/_/   \/_/\/_/   \/_/   \/_____/ 
+ ______     ______     ______     ______   ______     __     ______
+/\___  \   /\  __ \   /\  ___\   /\__  _\ /\  __ \   /\ \   /\  ___\
+\/_/  /__  \ \ \/\ \  \ \___  \  \/_/\ \/ \ \  __ \  \ \ \  \ \  __\
+  /\_____\  \ \_____\  \/\_____\    \ \_\  \ \_\ \_\  \ \_\  \ \_____\
+  \/_____/   \/_____/   \/_____/     \/_/   \/_/\/_/   \/_/   \/_____/
 ```
 
 # zostaje.
 
-**Finanse dla polskich JDG. Prosto, lokalnie, Twoje.**
+**Ile realnie zostaje mi z tego co zarobilem?**
 
-*Transakcje · Faktury · KSeF · Budżety · Podatki · AI*
-
----
+Lokalny, zaszyfrowany skarbiec finansow JDG — jak Obsidian, ale dla pieniedzy.
+Jedno pytanie. Jedna liczba. Zero kompromisow z prywatnosciq.
 
 [![License: FSL-1.1](https://img.shields.io/badge/License-FSL--1.1-blue.svg)](https://fsl.software/)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-5-2D3748?logo=prisma)](https://www.prisma.io/)
+[![Electron](https://img.shields.io/badge/Electron-33-47848F?logo=electron)](https://www.electronjs.org/)
 [![Self-hostable](https://img.shields.io/badge/Self--host-Docker-2496ED?logo=docker)](https://www.docker.com/)
 
 </div>
 
 ---
 
-## Czym jest zostaje.?
+## Jak to dziala — w 30 sekund
 
-**zostaje.** to aplikacja finansowa zaprojektowana specjalnie dla polskich jednoosobowych działalności gospodarczych. Nie jest to kolejny arkusz Excel ani drogie oprogramowanie księgowe — to narzędzie, które działa **lokalnie na Twoim serwerze**, nie wysyła Twoich danych do chmury i robi dokładnie to, czego potrzebujesz jako JDG.
+1. Otwierasz aplikacje, ustawiasz haslo skarbca
+2. Dodajesz transakcje (reczne, CSV z banku, albo OCR paragonu)
+3. **zostaje.** liczy ZUS + PIT za Ciebie — automatycznie, w tle
+4. Na gorze widzisz jedna liczbe: **ile realnie zostaje**
+5. Dane nigdy nie opuszczaja Twojego urzadzenia (chyba ze sam chcesz sync)
 
-**Dla kogo?** Freelancerzy, programiści, projektanci, konsultanci — każdy kto ma JDG i chce mieć finanse pod kontrolą bez płacenia abonamentu za oprogramowanie.
+To tyle. Reszta — kontrahenci, faktury, raporty, graf powiazan — odkrywasz kiedy potrzebujesz.
 
 ---
 
-## Funkcje
+## Filozofia
 
-### Transakcje i finanse
-- Śledzenie przychodów i wydatków z kategoryzacją
-- **Auto-kategoryzacja** przez lokalne AI (Ollama) — bez wysyłania danych na zewnątrz
-- Import wyciągów bankowych z CSV
-- Wykrywanie duplikatów transakcji (fingerprinting)
-- Budżety miesięczne per kategoria z alertami przekroczenia
+### Jedno pytanie zamiast dashboardu
 
-### Faktury i kontrahenci
-- Wystawianie faktur VAT z automatyczną numeracją
-- Baza kontrahentów z NIP i danymi adresowymi
-- Generowanie PDF faktur
-- **Integracja z KSeF** (Krajowy System e-Faktur) — wysyłka faktur do Ministerstwa Finansów
-- Śledzenie statusów: Wystawiona → Wysłana → Opłacona
+zostaje. nie jest "dashboardem finansowym". To narzedzie ktore odpowiada na jedno pytanie:
+**ile realnie zostaje mi z tego co zarobilem — po ZUS, po PIT, po wszystkim.**
 
-### Podatki i zgodność
-- Kalkulator zaliczek PIT (skala, liniowy, ryczałt)
-- Śledzenie progu rejestracji VAT (200k PLN)
+Wszystko inne jest drill-down z tej jednej liczby.
+
+### Obsidian model
+
+- **Free + Desktop:** pelne funkcje, dane lokalnie, zero konta, zero internetu
+- **Pro (29 zl/mc):** serwer sync Boring Code — wygoda, multi-device, backup
+- **Zadna funkcja finansowa nie jest za paywallem.** Pro = convenience sync, nie dostep do funkcji.
+
+### Dane naleza do Ciebie
+
+- Plik `.zostaje` jest Twoj — skopiuj go, wrzu na Google Drive, zrob backup
+- Szyfrowanie AES-GCM-256 z kluczem z Twojego hasla (PBKDF2, 310k iteracji)
+- Serwer nigdy nie widzi danych w postaci jawnej (E2E)
+- Hasla nie da sie odzyskac — to celowe, nie bug
+
+### Niewidzialne narzedzie
+
+Aplikacja ma nie ciazyc. Wchodzisz, dodajesz transakcje, widzisz ile zostaje, wychodzisz.
+Command Palette (`Cmd+K`) to serce interakcji — kazda akcja dostepna z klawiatury.
+
+---
+
+## Kluczowe funkcje
+
+### Podatki i ZUS — to po co tu jestes
+
+- **Kalkulator PIT:** liniowy 19%, skala podatkowa, ryczalt (stawki 2%-17%)
+- **Kalkulator ZUS:** ulga na start, maly ZUS, maly ZUS+, pelny ZUS — stawki 2026
+- Skladka zdrowotna wyliczana per forma opodatkowania
+- Symulacja roznych scenariuszy — porownanie form opodatkowania side-by-side
+- Sledzenie progu rejestracji VAT (200 000 PLN)
 - Przypomnienia o terminach (ZUS do 20., JPK do 25.)
-- Kalkulacje składek ZUS
+- **Jedna liczba na wierzchu:** przychod - wydatki - ZUS - PIT = **zostaje**
 
-### Raporty i dashboard
-- Dashboard z KPI: przychody, wydatki, zysk, prognoza podatku
-- Wykresy trendów miesięcznych (Recharts)
-- Struktura wydatków per kategoria
-- Powiadomienia email (SMTP) — raporty, przeterminowane faktury
+### Transakcje
 
-### Integracje
-| Integracja | Opis | Konfiguracja |
-|------------|------|-------------|
-| **KSeF** | Krajowy System e-Faktur (MF) | UI → Ustawienia |
-| **Ollama** | Lokalny model AI (llama3, mistral) | UI → Ustawienia |
-| **SMTP** | Email (Gmail, własny serwer) | UI → Ustawienia |
+- CRUD z automatyczna kategoryzacja (silnik regul + opcjonalnie AI przez Ollama)
+- Import CSV z polskich bankow (mBank, ING, PKO, Santander i inne)
+- Skanowanie paragonow (OCR przez Ollama z modelem llava)
+- Wykrywanie duplikatow (fingerprinting)
+- Blokada miesiecy (finalizacja zamknietych okresow)
+- Obsluga walut obcych z przeliczeniem na PLN
+
+### Faktury
+
+- Faktury VAT, proforma i korekty
+- Automatyczna numeracja (konfigurowalny szablon, np. `FV/{YYYY}/{NNN}`)
+- Druk / generowanie PDF
+- Integracja z **KSeF** (Krajowy System e-Faktur)
+- Sledzenie statusow: wystawiona, wyslana, oplacona, przeterminowana, anulowana
+- Stawki VAT: 23%, 8%, 5%, 0%, ZW
+
+### Budzety
+
+- Limity per kategoria per miesiac
+- Alerty email przy przekroczeniu progu (domyslnie 80%)
+- Dashboard z progressem wykorzystania
+
+### Raporty
+
+- Raport miesieczny: przychody, koszty, zysk netto
+- Analiza kategoriowa wydatkow i przychodow
+- Eksport JPK-V7M (VAT) — XML do Urzedu Skarbowego
+- Wykresy trendow (Recharts)
+- Digest email — automatyczne podsumowania
+
+### Ukryte super-funkcje
+
+Istnieja, ale nie narzucaja sie. Odkrywasz je kiedy chcesz:
+
+- **Graf powiazan** — wizualizacja d3-force: transakcje, kontrahenci, projekty, kategorie
+- **Silnik regul** — automatyczne tagowanie, kategoryzacja, przypisywanie do projektow
+- **System pluginow** — rozszerzalnosc z izolacja bezpieczenstwa (sandboxed context)
+- **Audit log** — zaszyfrowana historia kazdej zmiany
+- **Command Palette** — pelne sterowanie z klawiatury (`Cmd+K`)
+- **Projekty** — grupowanie transakcji w konteksty biznesowe
 
 ---
 
-## Szybki start
+## Quick Start
 
 ### Wymagania
+
 - **Node.js** 18+
 - **npm** 9+
-- *(opcjonalnie)* Docker dla self-hostingu
-- *(opcjonalnie)* [Ollama](https://ollama.ai/) dla auto-kategoryzacji AI
+- *(opcjonalnie)* Docker do self-hostingu
+- *(opcjonalnie)* [Ollama](https://ollama.ai/) do auto-kategoryzacji AI
 
-### Uruchomienie lokalne
+### Instalacja
 
 ```bash
-# 1. Sklonuj repozytorium
 git clone https://github.com/1norahc/zostaje.git
 cd zostaje
-
-# 2. Zainstaluj zależności
-npm install
-
-# 3. Skonfiguruj środowisko
 cp .env.example .env
-
-# 4. Zainicjalizuj bazę danych
-npx prisma migrate deploy
-
-# 5. Wgraj domyślne kategorie
-npm run db:seed
-
-# 6. Uruchom
+npm install
+npm run db:push
+npm run db:seed   # domyslne kategorie + dane demo
 npm run dev
 ```
 
-Otwórz [http://localhost:3000](http://localhost:3000)
+Otworz [http://localhost:3000](http://localhost:3000)
 
-### Zmienne środowiskowe
+### Konto demo
 
-| Zmienna | Opis | Domyślna |
-|---------|------|---------|
-| `DATABASE_URL` | Ścieżka do pliku SQLite | `file:./dev.db` |
-| `APP_PASSWORD` | Hasło dostępu (puste = brak) | *(brak)* |
-| `NEXTAUTH_SECRET` | Sekret sesji — zmień na produkcji! | `change-me` |
-| `DOMAIN` | Domena (Docker/Traefik) | `localhost` |
+- **Email:** `demo@zostaje.app`
+- **Haslo:** `demo1234`
+- **Plan:** Pro (pelny dostep)
 
-> Pozostałe konfiguracje (SMTP, Ollama, KSeF) ustawiasz przez UI w zakładce **Ustawienia** — bez dotykania plików.
+### Wersja desktopowa (Electron)
+
+```bash
+npm run electron:dev     # Development z hot-reload
+npm run electron:build   # Build instalatorow (dmg/exe/AppImage)
+```
 
 ---
 
-## Self-hosting z Docker
+## Jak to dziala pod spodem
 
-Najprostszy sposób na uruchomienie na własnym serwerze:
+### Architektura
+
+**Desktop (Electron)** — darmowy, offline-first:
+- Dane w zaszyfrowanym pliku `vault.zostaje` na dysku
+- Brak konta, logowania, internetu
+- Pelny dostep do wszystkich funkcji
+
+**Web (przegladarka)** — wymaga konta:
+- Rejestracja/logowanie przez sesje cookie (httpOnly, HMAC-SHA256)
+- Plan free → upgrade screen, Plan pro → pelny dostep + sync E2E
+- Dane w zaszyfrowanym skarbcu IndexedDB
+
+### Przeplyw danych
+
+1. Uzytkownik tworzy transakcje
+2. **Plugin `rules-plugin`** stosuje reguly kategoryzacji (`transaction:before-save`)
+3. Dane szyfrowane **AES-GCM-256** kluczem z hasla uzytkownika
+4. Zapis do IndexedDB (web) lub pliku (Electron)
+5. **Plugin `audit-plugin`** loguje zmiane
+6. **Plugin `sync-plugin`** planuje push na serwer (tylko Pro)
+
+Pipeline odporny na bledy — wyjatek w pluginie nie przerywa zapisu.
+
+### Bezpieczenstwo (zero-knowledge)
+
+- Haslo nigdy nie opuszcza urzadzenia — sluzy do derivowania klucza szyfrowania
+- Klucz sesji zyje tylko w RAM (`keystore.ts`) — nie localStorage, nie IndexedDB
+- PBKDF2-SHA256 (310k iteracji) + AES-GCM-256 (12-byte IV)
+- E2E sync: serwer przechowuje wylacznie ciphertext
+- Sesja: HMAC-SHA256 cookies, auto-lock po 30 min bezczynnosci
+- Security headers: X-Content-Type-Options, X-Frame-Options, Referrer-Policy
+
+---
+
+## Zmienne srodowiskowe
+
+| Zmienna | Wymagana | Opis | Domyslna |
+|---------|----------|------|----------|
+| `DATABASE_URL` | Tak | Sciezka do pliku SQLite | `file:./dev.db` |
+| `NEXTAUTH_SECRET` | Tak (prod) | Sekret sesji (HMAC-SHA256) | `change-me-in-production` |
+| `PLAN` | Nie | Plan instancji: `free` / `pro` | `free` |
+| `SYNC_TOKEN` | Nie | Bearer token dla sync API (Pro) | *(puste = sync wylaczony)* |
+| `DOMAIN` | Nie | Domena (Docker/Traefik) | — |
+
+> SMTP, Ollama i KSeF konfiguruje sie przez UI w zakladce **Ustawienia**.
+
+---
+
+## Komendy
+
+| Komenda | Opis |
+|---------|------|
+| `npm run dev` | Serwer deweloperski na :3000 |
+| `npm run build` | Prisma generate + Next.js build |
+| `npm run start` | Uruchomienie zbudowanej aplikacji |
+| `npm run lint` | ESLint |
+| `npm run db:push` | Sync schematu bez migracji (dev-only) |
+| `npm run db:migrate` | Prisma migrate dev |
+| `npm run db:seed` | Seed demo + domyslne kategorie |
+| `npm run db:studio` | Prisma Studio na :5555 |
+| `npm run electron:dev` | Electron development |
+| `npm run electron:build` | Build instalatorow (dmg/exe/AppImage) |
+
+---
+
+## Deployment (produkcja)
+
+### Docker
 
 ```bash
-# Pobierz plik konfiguracyjny
-curl -O https://raw.githubusercontent.com/1norahc/zostaje/main/docker-compose.yml
-
-# Skonfiguruj zmienne
-cp .env.example .env
-# Edytuj .env — ustaw NEXTAUTH_SECRET i DOMAIN
-
-# Uruchom
-docker compose up -d
+docker build -t zostaje .
+docker run -p 3000:3000 \
+  -e DATABASE_URL="file:/data/finance.db" \
+  -e NEXTAUTH_SECRET="$(openssl rand -base64 32)" \
+  -e PLAN=pro \
+  -e SYNC_TOKEN="$(openssl rand -hex 32)" \
+  -v zostaje-data:/data \
+  zostaje
 ```
 
-### Z Traefikiem (HTTPS)
+### Traefik (opcjonalnie)
+
+Automatyczny HTTPS z Let's Encrypt. Ustaw `DOMAIN` w `.env`.
 
 ```yaml
 # docker-compose.yml — fragment
 services:
   app:
-    image: ghcr.io/1norahc/zostaje:latest
+    image: zostaje:latest
     environment:
       - DATABASE_URL=file:/data/finance.db
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - PLAN=pro
+      - SYNC_TOKEN=${SYNC_TOKEN}
     volumes:
       - ./data:/data
     labels:
@@ -151,153 +265,71 @@ services:
       - "traefik.http.routers.zostaje.tls.certresolver=letsencrypt"
 ```
 
----
+### Backup
 
-## Stack technologiczny
+- **Vault:** eksportuj plik `.zostaje` z zakladki Ustawienia
+- **SQLite (legacy):** skopiuj `prisma/dev.db` (lub `/data/finance.db` w Dockerze)
+- **Automatyczne backupy:** konfigurowalne w Ustawienia
 
-```
-Next.js 14 (App Router)     — framework, SSR, API routes
-Prisma 5 + SQLite           — ORM + baza danych (jeden plik, zero konfiguracji)
-HeroUI v2                   — biblioteka komponentów UI
-TanStack Query              — cache i synchronizacja danych z API
-Zustand                     — globalny stan aplikacji
-Recharts                    — wykresy finansowe
-Tailwind CSS                — stylowanie
-Sonner                      — powiadomienia toast
-Ollama                      — lokalne modele AI (opcjonalne)
-```
-
-### Architektura
-
-```
-src/
-├── app/
-│   ├── (app)/              # Strony z sidebar/header layoutem
-│   └── api/                # REST API endpoints
-├── components/             # Komponenty UI
-│   ├── layout/             # Sidebar, Header
-│   ├── dashboard/          # Dashboard widgets
-│   └── [feature]/          # Komponenty per funkcja
-├── server/                 # Kod serwerowy (Prisma, mailer, KSeF, AI)
-└── lib/                    # Współdzielony kod (formatters, utils, tax-calculator)
-```
-
-### Komendy developerskie
-
-```bash
-npm run dev           # Serwer dev na :3000
-npm run build         # Build produkcyjny (prisma generate + next build)
-npm run lint          # ESLint
-npm run db:migrate    # Nowa migracja Prisma
-npm run db:push       # Sync schematu bez migracji (dev-only)
-npm run db:seed       # Domyślne kategorie
-npm run db:studio     # Prisma Studio na :5555
-```
+> Faktury VAT maja obowiazek przechowywania przez **5 lat** — pamietaj o backupach.
 
 ---
 
-## Backup danych
+## Co planujemy
 
-Cała baza danych to **jeden plik SQLite**. Backup jest trywialny:
-
-```bash
-cp prisma/dev.db "backup-$(date +%Y%m%d).db"
-```
-
-Faktury VAT mają obowiązek przechowywania przez **5 lat** — wbuduj backup w cron lub skorzystaj z automatycznych backupów w wersji Cloud.
-
----
-
-## Model licencjonowania
-
-**zostaje.** działa na licencji [Functional Source License 1.1 (FSL)](https://fsl.software/).
-
-### Co możesz robić
-
-| | Dozwolone |
-|--|-----------|
-| Self-hosting | Tak — na własnym serwerze, dla siebie lub firmy |
-| Modyfikacje | Tak — fork, dostosowanie do własnych potrzeb |
-| Kontrybucje | Tak — pull requesty są mile widziane |
-| Użytek komercyjny (własny) | Tak — używaj do zarządzania własną firmą |
-
-### Czego nie możesz robić
-
-| | Zabronione |
-|--|-----------|
-| Oferowanie jako SaaS/Cloud | Nie — nie możesz sprzedawać dostępu do cudzego kodu |
-| Rebrandowanie i odsprzedaż | Nie — szanujmy swoją pracę |
-
-### Change Date — automatyczne otwieranie
-
-Po **2 latach** od wydania danej wersji licencja FSL automatycznie wygasa i wersja przechodzi na **Apache License 2.0** (w pełni otwarta licencja). Kod zawsze w końcu staje się w pełni wolny.
-
-> **Dlaczego FSL?** Chcę, żeby finansowa logika aplikacji była **transparentna** (każdy może sprawdzić jak liczymy podatki i ZUS), ale jednocześnie żeby projekt mógł się finansowo utrzymać przez wersję Cloud. Self-hosting jest i pozostanie darmowy.
+| Priorytet | Funkcja | Status |
+|-----------|---------|--------|
+| 1 | Dashboard "jedna liczba" z drill-down | W toku |
+| 2 | Command Palette — pelne pokrycie akcji | W toku |
+| 3 | Import CSV — auto-detekcja banku | Gotowe |
+| 4 | KSeF integracja produkcyjna | Planowane |
+| 5 | Electron auto-update | Planowane |
+| 6 | Multi-waluta z live kursami NBP | Planowane |
+| 7 | Eksport JPK-V7M | Gotowe |
+| 8 | Pluginy spolecznosci — marketplace | Planowane |
+| 9 | Mobile PWA (offline) | Czesciowo |
+| 10 | AI kategoryzacja (Ollama) | Gotowe |
 
 ---
 
-## Wkład w projekt
+## Tech stack
 
-Pull requesty są bardzo mile widziane, szczególnie w obszarach:
-
-- Poprawki obliczeń podatkowych / ZUS
-- Nowe stawki i przepisy (aktualizacje rokrocznie)
-- Importery wyciągów bankowych (MT940, OFX, formaty banków)
-- Tłumaczenia i lokalizacja
-- Testy (brak ich w projekcie — każdy PR z testami to złoto)
-
-```bash
-git checkout -b feature/nazwa-funkcji
-# ... zmiany ...
-git commit -m "feat: opis zmiany"
-git push origin feature/nazwa-funkcji
-# → otwórz Pull Request
-```
-
----
-
-## Roadmapa / TODO
-
-Otwarte zadania śledzone jako [GitHub Issues](https://github.com/tinyboringcode/zostaje/issues). Poniżej skrót tego co jest zaplanowane.
-
-### Bugs & UI
-- [ ] [#1](https://github.com/tinyboringcode/zostaje/issues/1) Wyrównanie i wyśrodkowanie elementów UI w całej aplikacji
-- [ ] [#3](https://github.com/tinyboringcode/zostaje/issues/3) Przeprojektowanie sekcji Kontrahenci — widok kart, zakładki, oś czasu aktywności
-
-### Funkcje finansowe
-- [ ] [#2](https://github.com/tinyboringcode/zostaje/issues/2) Mocny kalkulator ZUS — ulga na start, Mały ZUS, Mały ZUS Plus, pełny ZUS, składka zdrowotna per forma opodatkowania
-- [ ] Import wyciągów bankowych — MT940, OFX, formaty ING/PKO/mBank
-- [ ] Eksport JPK_V7M — pełny format XML do wysyłki do US
-- [ ] Tryb wielofirmowy — obsługa więcej niż jednej JDG
-
-### AI & Automatyzacja
-- [ ] [#5](https://github.com/tinyboringcode/zostaje/issues/5) Predykcja budżetu — prognoza wydatków na kolejny miesiąc na podstawie historii
-- [ ] Batch OCR — przetwarzanie folderu ze zdjęciami paragonów
-- [ ] Chat z danymi finansowymi — "Ile wydałem na marketing w Q1?"
-- [ ] Wykrywanie anomalii — alert gdy wydatek w kategorii odstaje od normy
-- [ ] Whisper — głosowe dodawanie transakcji
-
-### Techniczne
-- [ ] [#4](https://github.com/tinyboringcode/zostaje/issues/4) Code review — bezpieczeństwo, walidacja inputów, luki w API
-- [ ] Testy — brak pokrycia testami; E2E (Playwright) i unit (Vitest) to priorytet
-- [ ] Automatyczne backupy — cron + opcja wysyłki na S3/Backblaze
-- [ ] Rate limiting na API — zabezpieczenie przed nadmiernym użyciem
+| Warstwa | Technologia |
+|---------|-------------|
+| Framework | Next.js 14 (App Router), React 18, TypeScript 5 |
+| UI | HeroUI v2, Tailwind CSS, Radix UI, Framer Motion |
+| State | Zustand, TanStack Query v5 |
+| Dane lokalne | IndexedDB (idb) + AES-GCM vault |
+| Dane serwerowe | Prisma 5 + SQLite (legacy, migracja w toku) |
+| Desktop | Electron 33 (electron-builder) |
+| Wykresy | Recharts, D3 (graf powiazan) |
+| AI | Ollama (lokalne LLM — llama3, mistral, llava) |
+| Email | Nodemailer |
+| Command palette | cmdk |
+| Crypto | Web Crypto API (zero zewnetrznych zaleznosci) |
 
 ---
 
 ## Licencja
 
-Copyright © 2026 [Boring Code — Rajan Bor](https://github.com/1norahc)
+Copyright 2026 [Boring Code — Rajan Bor](https://github.com/1norahc)
 
-Dostępne na licencji [Functional Source License, Version 1.1](LICENSE.md).  
+Dostepne na licencji [Functional Source License, Version 1.1](LICENSE.md).
 Po 2 latach od wydania wersji — [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
+| Dozwolone | Zabronione |
+|-----------|------------|
+| Self-hosting na wlasnym serwerze | Oferowanie jako SaaS/Cloud |
+| Modyfikacje i forki | Rebrandowanie i odsprzedaz |
+| Pull requesty i kontrybucje | |
+| Uzytek komercyjny (wlasna firma) | |
 
 ---
 
 <div align="center">
 
-Zbudowane z myślą o polskich JDG, które mają lepsze rzeczy do roboty niż walka z Excelem.
+**zostaje.** Zbudowane z mysla o polskich JDG, ktore maja lepsze rzeczy do roboty niz walka z Excelem.
 
-**zostaje.**
+*Ile realnie zostaje? Teraz wiesz.*
 
 </div>

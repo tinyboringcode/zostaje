@@ -1,13 +1,24 @@
 export const dynamic = "force-dynamic";
-
 import { NextRequest, NextResponse } from "next/server";
+import { getUserFromRequest } from "@/server/auth";
 
-/**
- * Returns the current user's plan. For now this is driven by an env
- * variable (`PLAN=pro` or `PLAN=free`). In a real multi-tenant setup
- * this would read from the user record on the session.
- */
-export async function GET(_req: NextRequest) {
-  const plan = process.env.PLAN === "pro" ? "pro" : "free";
-  return NextResponse.json({ plan });
+export async function GET(req: NextRequest) {
+  // Desktop (Electron): plan is driven by PLAN env var, no account needed
+  const ua = req.headers.get("user-agent") ?? "";
+  if (ua.includes("Electron/")) {
+    const plan = process.env.PLAN === "pro" ? "pro" : "free";
+    return NextResponse.json({ plan, isDesktop: true });
+  }
+
+  const user = await getUserFromRequest(req);
+  if (!user) {
+    return NextResponse.json({ error: "Nie zalogowano" }, { status: 401 });
+  }
+
+  return NextResponse.json({
+    id: user.id,
+    email: user.email,
+    plan: user.plan,
+    createdAt: user.createdAt.toISOString(),
+  });
 }

@@ -10,10 +10,11 @@
  * into a native app for macOS, Windows, and Linux.
  */
 
-import { app, BrowserWindow, shell } from "electron";
+import { app, BrowserWindow, shell, ipcMain } from "electron";
 import { spawn, type ChildProcess } from "child_process";
 import * as path from "path";
 import * as http from "http";
+import * as fs from "fs";
 
 const IS_DEV = process.env.NODE_ENV === "development";
 const PORT = IS_DEV ? 3000 : 3456;
@@ -21,6 +22,39 @@ const NEXT_URL = `http://localhost:${PORT}/dashboard`;
 
 let mainWindow: BrowserWindow | null = null;
 let nextProcess: ChildProcess | null = null;
+
+// Vault file path
+const getVaultFilePath = () => path.join(app.getPath("userData"), "vault.zostaje");
+
+// IPC: get vault file path
+ipcMain.handle("vault:get-path", () => getVaultFilePath());
+
+// IPC: check if vault file exists
+ipcMain.handle("vault:exists", () => fs.existsSync(getVaultFilePath()));
+
+// IPC: save vault to file
+ipcMain.handle("vault:save", (_event: Electron.IpcMainInvokeEvent, data: string) => {
+  try {
+    fs.writeFileSync(getVaultFilePath(), data, "utf-8");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+});
+
+// IPC: load vault from file
+ipcMain.handle("vault:load", () => {
+  try {
+    if (!fs.existsSync(getVaultFilePath())) return { ok: false, error: "Plik nie istnieje" };
+    const data = fs.readFileSync(getVaultFilePath(), "utf-8");
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: String(err) };
+  }
+});
+
+// IPC: get userData directory path (for display in UI)
+ipcMain.handle("vault:get-data-dir", () => app.getPath("userData"));
 
 function createWindow() {
   mainWindow = new BrowserWindow({

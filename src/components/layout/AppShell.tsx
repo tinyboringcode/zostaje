@@ -7,43 +7,20 @@ import {
   LayoutDashboard,
   ArrowLeftRight,
   Building2,
-  Download,
   BarChart3,
-  Receipt,
-  Target,
-  Tag,
-  History,
-  BookOpen,
-  Sparkles,
   Settings,
-  ChevronDown,
+  Command,
 } from "lucide-react";
 import { QuickAdd } from "@/components/quick-add/QuickAdd";
 import { PageTransition } from "./PageTransition";
 
-// ── Nav structure ──────────────────────────────────────────────────────────
+// ── Nav structure — max 5 primary items ──────────────────────────────────
 
-const NAV_GROUPS: { href: string; label: string; icon: React.ElementType }[][] = [
-  [
-    { href: "/dashboard",    label: "Przegląd",          icon: LayoutDashboard },
-    { href: "/transactions", label: "Transakcje",         icon: ArrowLeftRight },
-    { href: "/contractors",  label: "Kontrahenci",        icon: Building2 },
-    { href: "/import",       label: "Import",             icon: Download },
-    { href: "/reports",      label: "Raporty",            icon: BarChart3 },
-  ],
-  [
-    { href: "/podatki",      label: "Podatki i ZUS",      icon: Receipt },
-    { href: "/categories",   label: "Kategorie",          icon: Tag },
-  ],
-  [
-    { href: "/historia",     label: "Historia finansowa", icon: History },
-    { href: "/wiedza",       label: "Baza wiedzy",        icon: BookOpen },
-    { href: "/ai-demo",      label: "Demo AI",            icon: Sparkles },
-  ],
-];
-
-const MORE_NAV = [
-  { href: "/budgets", label: "Budżety", icon: Target },
+const PRIMARY_NAV = [
+  { href: "/dashboard",    label: "Przegląd",     icon: LayoutDashboard },
+  { href: "/transactions", label: "Transakcje",    icon: ArrowLeftRight },
+  { href: "/contractors",  label: "Kontrahenci",   icon: Building2 },
+  { href: "/reports",      label: "Raporty",       icon: BarChart3 },
 ];
 
 const BOTTOM_NAV = [
@@ -121,7 +98,6 @@ function NavItem({
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(true);
-  const [moreOpen, setMoreOpen] = useState(false);
   const pathname = usePathname();
 
   const isActive = (href: string) =>
@@ -215,96 +191,73 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             padding: "8px 6px",
             display: "flex",
             flexDirection: "column",
-            gap: 0,
+            gap: 1,
           }}
         >
-          {NAV_GROUPS.map((group, gi) => (
-            <div key={gi}>
-              {gi > 0 && (
-                <div
-                  style={{
-                    height: 1,
-                    background: "var(--surface2)",
-                    margin: "10px 10px",
-                  }}
-                />
-              )}
-              <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                {group.map((item) => (
-                  <NavItem
-                    key={item.href}
-                    href={item.href}
-                    label={item.label}
-                    icon={item.icon}
-                    open={open}
-                    active={isActive(item.href)}
-                  />
-                ))}
-              </div>
-            </div>
+          {PRIMARY_NAV.map((item) => (
+            <NavItem
+              key={item.href}
+              href={item.href}
+              label={item.label}
+              icon={item.icon}
+              open={open}
+              active={isActive(item.href)}
+            />
           ))}
 
-          {/* Więcej — collapsed disclosure */}
-          <div>
-            <div style={{ height: 1, background: "var(--surface2)", margin: "10px 10px" }} />
-            <button
-              onClick={() => setMoreOpen((v) => !v)}
-              title={!open ? "Więcej" : undefined}
+          {/* Cmd+K hint */}
+          <div style={{ height: 1, background: "var(--surface2)", margin: "14px 10px 8px" }} />
+          <button
+            onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
+            title={!open ? "Cmd+K" : undefined}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "7px 10px",
+              borderRadius: 7,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--text-3)",
+              width: "100%",
+              overflow: "hidden",
+              whiteSpace: "nowrap",
+              fontFamily: "var(--font-sans)",
+              transition: "color 140ms ease",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.color = "var(--text-2)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.color = "var(--text-3)";
+            }}
+          >
+            <Command size={15} style={{ flexShrink: 0, opacity: 0.6 }} />
+            <span
               style={{
+                fontSize: 13,
+                opacity: open ? 1 : 0,
+                transition: "opacity 120ms ease",
                 display: "flex",
                 alignItems: "center",
-                gap: 10,
-                padding: "7px 10px",
-                borderRadius: 6,
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                color: "var(--text-3)",
-                width: "100%",
-                overflow: "hidden",
-                whiteSpace: "nowrap",
-                fontFamily: "var(--font-sans)",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "var(--text-2)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.color = "var(--text-3)";
+                gap: 6,
               }}
             >
-              <ChevronDown
-                size={17}
-                style={{
-                  flexShrink: 0,
-                  transform: moreOpen ? "rotate(180deg)" : "rotate(0deg)",
-                  transition: "transform 200ms ease",
-                }}
-              />
-              <span
-                style={{
-                  fontSize: 13,
-                  opacity: open ? 1 : 0,
-                  transition: "opacity 120ms ease",
-                }}
-              >
-                Więcej
-              </span>
-            </button>
-            {moreOpen && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                {MORE_NAV.map((item) => (
-                  <NavItem
-                    key={item.href}
-                    href={item.href}
-                    label={item.label}
-                    icon={item.icon}
-                    open={open}
-                    active={isActive(item.href)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+              Więcej
+              <kbd style={{
+                fontSize: 10,
+                padding: "1px 5px",
+                borderRadius: 4,
+                border: "1px solid var(--border)",
+                background: "var(--surface)",
+                color: "var(--text-3)",
+                fontFamily: "var(--font-sans)",
+              }}>
+                ⌘K
+              </kbd>
+            </span>
+          </button>
         </nav>
 
         {/* Bottom nav (Ustawienia) */}

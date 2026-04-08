@@ -3,7 +3,10 @@
     "allow": [
       "Bash(npm run:*)",
       "Bash(npx prisma:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(for file:*)",
+      "Bash(do echo:*)",
+      "Bash(grep -l 'export const dynamic' /Users/rajan/Projekty/zostaje/src/app/api/**/route.ts)"
     ]
   }
 }

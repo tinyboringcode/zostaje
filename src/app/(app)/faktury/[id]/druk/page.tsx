@@ -1,5 +1,6 @@
 import { prisma } from "@/server/db";
 import { notFound } from "next/navigation";
+import PrintButton from "./PrintButton";
 
 export const dynamic = "force-dynamic";
 
@@ -176,14 +177,7 @@ export default async function DrukPage({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        <script dangerouslySetInnerHTML={{ __html: `
-          document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('print-btn').addEventListener('click', function() { window.print(); });
-          });
-        ` }} />
-        <button id="print-btn" className="print-btn">
-          🖨 Drukuj / Zapisz PDF
-        </button>
+        <PrintButton />
       </body>
     </html>
   );

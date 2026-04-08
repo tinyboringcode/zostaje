@@ -160,7 +160,7 @@ export function GraphView() {
         d.fx = event.x;
         d.fy = event.y;
       })
-      .on("end", (event, d) => {
+      .on("end", (event) => {
         if (!event.active) simulation.alphaTarget(0);
         // Keep pinned after drag — user releases with dblclick.
       });

@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import CountUp from "react-countup";
 import {
-  ArrowLeftRight, Tag, Target, BarChart3, Settings, Download,
-  Building2, Receipt, ChevronDown, ChevronUp, ChevronLeft, ChevronRight,
+  ChevronDown, ChevronUp, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { IntroScreen } from "@/components/onboarding/IntroScreen";
 
@@ -35,19 +34,6 @@ interface Transaction {
 }
 
 type YearMonthData = Record<string, { income: number; expense: number; profit: number }>;
-
-// ── Section tiles ──────────────────────────────────────────────────────────
-
-const SECTIONS = [
-  { href: "/transactions", icon: ArrowLeftRight, label: "Transakcje" },
-  { href: "/contractors",  icon: Building2,      label: "Kontrahenci" },
-  { href: "/import",       icon: Download,       label: "Import" },
-  { href: "/reports",      icon: BarChart3,      label: "Raporty" },
-  { href: "/podatki",      icon: Receipt,        label: "Podatki" },
-  { href: "/budgets",      icon: Target,         label: "Budżety" },
-  { href: "/categories",   icon: Tag,            label: "Kategorie" },
-  { href: "/settings",     icon: Settings,       label: "Ustawienia" },
-] as const;
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -334,10 +320,11 @@ export function DashboardHub() {
           {/* CTA row */}
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <Link
-              href="/transactions"
+              href="/transactions?new=1"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
+                gap: 8,
                 padding: "12px 24px",
                 background: "#7c3aed",
                 color: "#ffffff",
@@ -363,24 +350,27 @@ export function DashboardHub() {
             >
               Dodaj transakcję
             </Link>
-            <Link
-              href="/transactions"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                padding: "12px 16px",
+            <span style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: 13,
+              color: "var(--text-3)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}>
+              lub
+              <kbd style={{
+                fontSize: 11,
+                padding: "2px 7px",
+                borderRadius: 5,
+                border: "1px solid var(--border)",
+                background: "var(--surface)",
                 color: "var(--text-2)",
-                fontFamily: "var(--font-sans)",
-                fontSize: 15,
-                fontWeight: 500,
-                textDecoration: "none",
-                transition: "color 150ms ease",
-              }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-1)")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-2)")}
-            >
-              Wszystkie transakcje →
-            </Link>
+                fontFamily: "var(--font-mono)",
+              }}>
+                ⌘K
+              </kbd>
+            </span>
           </div>
         </div>
 
@@ -557,39 +547,6 @@ export function DashboardHub() {
               Wszystkie transakcje →
             </Link>
           </div>
-        </div>
-
-        {/* ── Section tiles ─────────────────────────────────────────────────── */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
-          {SECTIONS.map(({ href, icon: Icon, label }) => (
-            <Link
-              key={href}
-              href={href}
-              style={{
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                gap: 10, padding: "22px 12px", border: "1px solid var(--border)", borderRadius: 12,
-                background: "var(--bg)", textDecoration: "none",
-                fontFamily: "var(--font-sans)",
-                transition: "background 140ms ease, box-shadow 140ms ease, transform 140ms ease",
-                boxShadow: "var(--shadow-sm)",
-              }}
-              onMouseEnter={(e) => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.background = "var(--surface)";
-                el.style.boxShadow = "var(--shadow)";
-                el.style.transform = "translateY(-1px)";
-              }}
-              onMouseLeave={(e) => {
-                const el = e.currentTarget as HTMLElement;
-                el.style.background = "var(--bg)";
-                el.style.boxShadow = "var(--shadow-sm)";
-                el.style.transform = "translateY(0)";
-              }}
-            >
-              <Icon size={26} style={{ color: "var(--text-2)" }} />
-              <span style={{ color: "var(--text-1)", fontSize: 13, fontWeight: 500 }}>{label}</span>
-            </Link>
-          ))}
         </div>
 
       </div>

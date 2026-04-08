@@ -21,9 +21,8 @@ export interface TransactionDraft {
   notes?: string;
 }
 
-export interface Transaction extends TransactionDraft {
-  // `id` / `updatedAt` live on the StoredEntity envelope, not here.
-}
+// `id` / `updatedAt` live on the StoredEntity envelope, not here.
+export type Transaction = TransactionDraft;
 
 export interface Kontrahent {
   name: string;

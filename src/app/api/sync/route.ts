@@ -33,6 +33,10 @@ export async function POST(req: NextRequest) {
   if (typeof blob !== "string" || !blob.length) {
     return NextResponse.json({ error: "missing blob" }, { status: 400 });
   }
+  const MAX_BLOB_SIZE = 50 * 1024 * 1024; // 50MB
+  if (blob.length > MAX_BLOB_SIZE) {
+    return NextResponse.json({ error: "Blob too large" }, { status: 413 });
+  }
   if (typeof device_id !== "string" || !device_id.length) {
     return NextResponse.json({ error: "missing device_id" }, { status: 400 });
   }

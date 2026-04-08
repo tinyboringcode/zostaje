@@ -12,7 +12,7 @@ import { keystore } from "./keystore";
 import * as db from "./db";
 
 export type AuditAction = "create" | "update" | "delete";
-export type AuditEntity = "transaction" | "kontrahent" | "setting";
+export type AuditEntity = "transaction" | "kontrahent" | "setting" | "project" | "rule";
 
 export interface AuditEntry {
   id: string;

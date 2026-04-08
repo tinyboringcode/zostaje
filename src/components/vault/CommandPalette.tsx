@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils";
 interface CommandItem {
   id: string;
   label: string;
-  hint?: string;
+  group: string;
+  keywords?: string;
   run: () => void | Promise<void>;
 }
 
@@ -52,23 +53,47 @@ export function CommandPalette() {
 
   const commands: CommandItem[] = React.useMemo(
     () => [
+      // ── Akcje ──────────────────────────────────────────────
       {
-        id: "add-transaction",
-        label: "Dodaj transakcję",
-        run: () => go("/transactions?new=1"),
+        id: "add-income",
+        label: "Dodaj przychód",
+        group: "Akcje",
+        keywords: "nowa transakcja income",
+        run: () => go("/transactions?new=1&type=income"),
+      },
+      {
+        id: "add-expense",
+        label: "Dodaj wydatek",
+        group: "Akcje",
+        keywords: "nowa transakcja expense koszt",
+        run: () => go("/transactions?new=1&type=expense"),
       },
       {
         id: "add-kontrahent",
         label: "Dodaj kontrahenta",
+        group: "Akcje",
+        keywords: "nowy klient firma",
         run: () => go("/contractors?new=1"),
       },
-      { id: "nav-overview", label: "Przejdź: Przegląd", run: () => go("/") },
-      { id: "nav-transactions", label: "Przejdź: Transakcje", run: () => go("/transactions") },
-      { id: "nav-taxes", label: "Przejdź: Podatki i ZUS", run: () => go("/podatki") },
-      { id: "nav-kontrahenci", label: "Przejdź: Kontrahenci", run: () => go("/contractors") },
+      {
+        id: "add-invoice",
+        label: "Wystaw fakturę",
+        group: "Akcje",
+        keywords: "nowa faktura vat",
+        run: () => go("/faktury?new=1"),
+      },
+      {
+        id: "import-csv",
+        label: "Importuj CSV",
+        group: "Akcje",
+        keywords: "import bank plik",
+        run: () => go("/import"),
+      },
       {
         id: "export",
         label: "Eksportuj dane",
+        group: "Akcje",
+        keywords: "export backup json",
         run: async () => {
           setOpen(false);
           try {
@@ -82,16 +107,143 @@ export function CommandPalette() {
       {
         id: "lock",
         label: "Zablokuj skarbiec",
+        group: "Akcje",
+        keywords: "lock zamknij",
         run: () => {
           setOpen(false);
           lock();
         },
+      },
+
+      // ── Nawigacja ──────────────────────────────────────────
+      {
+        id: "nav-overview",
+        label: "Przegląd",
+        group: "Nawigacja",
+        keywords: "dashboard home glowna zostaje",
+        run: () => go("/dashboard"),
+      },
+      {
+        id: "nav-transactions",
+        label: "Transakcje",
+        group: "Nawigacja",
+        keywords: "lista transakcji",
+        run: () => go("/transactions"),
+      },
+      {
+        id: "nav-kontrahenci",
+        label: "Kontrahenci",
+        group: "Nawigacja",
+        keywords: "klienci firmy",
+        run: () => go("/contractors"),
+      },
+      {
+        id: "nav-reports",
+        label: "Raporty",
+        group: "Nawigacja",
+        keywords: "raport miesięczny analiza",
+        run: () => go("/reports"),
+      },
+      {
+        id: "nav-taxes",
+        label: "Podatki i ZUS",
+        group: "Nawigacja",
+        keywords: "pit ryczałt składki zdrowotna kalkulator",
+        run: () => go("/podatki"),
+      },
+      {
+        id: "nav-invoices",
+        label: "Faktury",
+        group: "Nawigacja",
+        keywords: "faktura vat ksef",
+        run: () => go("/faktury"),
+      },
+      {
+        id: "nav-budgets",
+        label: "Budżety",
+        group: "Nawigacja",
+        keywords: "budget limit",
+        run: () => go("/budgets"),
+      },
+      {
+        id: "nav-categories",
+        label: "Kategorie",
+        group: "Nawigacja",
+        keywords: "tag etykieta",
+        run: () => go("/categories"),
+      },
+      {
+        id: "nav-settings",
+        label: "Ustawienia",
+        group: "Nawigacja",
+        keywords: "settings config smtp ollama ksef",
+        run: () => go("/settings"),
+      },
+
+      // ── Odkrywaj ──────────────────────────────────────────
+      {
+        id: "nav-graph",
+        label: "Graf powiązań",
+        group: "Odkrywaj",
+        keywords: "wizualizacja d3 network mapa",
+        run: () => go("/graph"),
+      },
+      {
+        id: "nav-rules",
+        label: "Reguły automatyzacji",
+        group: "Odkrywaj",
+        keywords: "automat kategoryzacja silnik",
+        run: () => go("/rules"),
+      },
+      {
+        id: "nav-projects",
+        label: "Projekty",
+        group: "Odkrywaj",
+        keywords: "projekt grupowanie",
+        run: () => go("/projects"),
+      },
+      {
+        id: "nav-history",
+        label: "Historia zmian",
+        group: "Odkrywaj",
+        keywords: "audit log dziennik",
+        run: () => go("/historia"),
+      },
+      {
+        id: "nav-knowledge",
+        label: "Baza wiedzy",
+        group: "Odkrywaj",
+        keywords: "wiedza poradnik jdg",
+        run: () => go("/wiedza"),
+      },
+      {
+        id: "nav-indicators",
+        label: "Wskaźniki",
+        group: "Odkrywaj",
+        keywords: "kpi metryki analiza",
+        run: () => go("/wskazniki"),
+      },
+      {
+        id: "nav-cycle",
+        label: "Cykl finansowy",
+        group: "Odkrywaj",
+        keywords: "cashflow cykl przepływ",
+        run: () => go("/cykl"),
+      },
+      {
+        id: "nav-ai",
+        label: "Demo AI",
+        group: "Odkrywaj",
+        keywords: "ollama sztuczna inteligencja analiza",
+        run: () => go("/ai-demo"),
       },
     ],
     [go, lock]
   );
 
   if (!unlocked) return null;
+
+  const groups = Array.from(new Set(commands.map((c) => c.group)));
 
   return (
     <>
@@ -121,15 +273,25 @@ export function CommandPalette() {
                 <Command.Empty className="py-6 text-center text-sm text-muted-foreground">
                   Brak pasujących komend.
                 </Command.Empty>
-                {commands.map((c) => (
-                  <Command.Item
-                    key={c.id}
-                    value={c.label}
-                    onSelect={() => c.run()}
-                    className="flex cursor-pointer items-center justify-between rounded-sm px-3 py-2 text-sm aria-selected:bg-accent aria-selected:text-accent-foreground"
+                {groups.map((group) => (
+                  <Command.Group
+                    key={group}
+                    heading={group}
+                    className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:text-muted-foreground"
                   >
-                    <span>{c.label}</span>
-                  </Command.Item>
+                    {commands
+                      .filter((c) => c.group === group)
+                      .map((c) => (
+                        <Command.Item
+                          key={c.id}
+                          value={`${c.label} ${c.keywords ?? ""}`}
+                          onSelect={() => c.run()}
+                          className="flex cursor-pointer items-center justify-between rounded-sm px-3 py-2 text-sm aria-selected:bg-accent aria-selected:text-accent-foreground"
+                        >
+                          <span>{c.label}</span>
+                        </Command.Item>
+                      ))}
+                  </Command.Group>
                 ))}
               </Command.List>
             </Command>

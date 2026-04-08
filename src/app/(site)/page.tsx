@@ -338,7 +338,7 @@ export default function HomePage() {
                 </div>
               </div>
               <p style={{ fontSize: 15, color: "#888", lineHeight: 1.65, fontStyle: "italic", margin: 0 }}>
-                "Nareszcie wiem czy stać mnie na nowy sprzęt, zanim sprawdzę konto w banku."
+                &ldquo;Nareszcie wiem czy stać mnie na nowy sprzęt, zanim sprawdzę konto w banku.&rdquo;
               </p>
             </div>
           </div>

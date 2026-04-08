@@ -138,7 +138,7 @@ async function mergeLastWriteWins(remote: RemoteSnapshot): Promise<void> {
       const existing = await storage.getById(entity, incoming.id);
       if (!existing || (incoming.updatedAt ?? 0) > (existing.updatedAt ?? 0)) {
         if (existing) {
-          await storage.update(entity, incoming.id, incoming.data as any);
+          await storage.update(entity, incoming.id, incoming.data as never);
         } else {
           await storage.add(entity, incoming.data, { id: incoming.id });
         }
