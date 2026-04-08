@@ -94,7 +94,7 @@ export async function decrypt(ciphertext: string, key: CryptoKey): Promise<unkno
       data as BufferSource
     );
     return JSON.parse(new TextDecoder().decode(decrypted));
-  } catch (err) {
+  } catch {
     throw new EncryptionError();
   }
 }

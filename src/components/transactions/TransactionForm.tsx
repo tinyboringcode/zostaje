@@ -16,6 +16,17 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { Camera } from "lucide-react";
 import { ReceiptScanner } from "./ReceiptScanner";
+import { computeGross, computeNet } from "@/lib/formatters";
+import type { VatRate } from "@/lib/types";
+
+const VAT_RATES: { value: string; label: string }[] = [
+  { value: "none", label: "Bez VAT" },
+  { value: "23", label: "23%" },
+  { value: "8", label: "8%" },
+  { value: "5", label: "5%" },
+  { value: "0", label: "0%" },
+  { value: "-1", label: "ZW" },
+];
 
 const CURRENCIES = ["PLN", "EUR", "USD", "GBP", "CHF"];
 
@@ -73,6 +84,8 @@ export function TransactionForm({ open, onClose, editTx, categories }: Props) {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [nbpLoading, setNbpLoading] = useState(false);
 
+  const [amountMode, setAmountMode] = useState<"net" | "gross">("gross");
+
   const [form, setForm] = useState({
     type: "EXPENSE",
     amount: "",
@@ -85,6 +98,10 @@ export function TransactionForm({ open, onClose, editTx, categories }: Props) {
     currency: "PLN",
     originalAmount: "",
     currencyRate: "",
+    vatRate: "none" as string,
+    amountNet: "",
+    amountGross: "",
+    vatAmount: "",
   });
 
   // Fetch contractors list
@@ -130,6 +147,10 @@ export function TransactionForm({ open, onClose, editTx, categories }: Props) {
         currency: "PLN",
         originalAmount: "",
         currencyRate: "",
+        vatRate: "none",
+        amountNet: "",
+        amountGross: "",
+        vatAmount: "",
       });
       setContractorSearch(ctxName);
     } else {
@@ -145,6 +166,10 @@ export function TransactionForm({ open, onClose, editTx, categories }: Props) {
         currency: "PLN",
         originalAmount: "",
         currencyRate: "",
+        vatRate: "none",
+        amountNet: "",
+        amountGross: "",
+        vatAmount: "",
       });
       setContractorSearch("");
     }
@@ -160,6 +185,36 @@ export function TransactionForm({ open, onClose, editTx, categories }: Props) {
         setForm((f) => ({ ...f, currencyRate: String(data.rate) }));
       }
     } catch { /* ignore */ } finally { setNbpLoading(false); }
+  };
+
+  const recalcVat = (amount: string, rate: string, mode: "net" | "gross") => {
+    if (!amount || rate === "none") return { amountNet: "", amountGross: "", vatAmount: "" };
+    const num = parseFloat(amount);
+    if (isNaN(num)) return { amountNet: "", amountGross: "", vatAmount: "" };
+    const r = parseInt(rate) as VatRate;
+    if (mode === "net") {
+      const { gross, vat } = computeGross(num, r);
+      return { amountNet: amount, amountGross: gross.toFixed(2), vatAmount: vat.toFixed(2) };
+    }
+    const { net, vat } = computeNet(num, r);
+    return { amountNet: net.toFixed(2), amountGross: amount, vatAmount: vat.toFixed(2) };
+  };
+
+  const handleVatRateChange = (rate: string) => {
+    const calc = recalcVat(form.amount, rate, amountMode);
+    setForm((f) => ({ ...f, vatRate: rate, ...calc }));
+  };
+
+  const handleAmountChange = (val: string) => {
+    const calc = recalcVat(val, form.vatRate, amountMode);
+    setForm((f) => ({ ...f, amount: val, ...calc }));
+  };
+
+  const toggleAmountMode = () => {
+    const next = amountMode === "net" ? "gross" : "net";
+    setAmountMode(next);
+    const calc = recalcVat(form.amount, form.vatRate, next);
+    setForm((f) => ({ ...f, ...calc }));
   };
 
   const handleCurrencyChange = (currency: string) => {
@@ -291,7 +346,18 @@ export function TransactionForm({ open, onClose, editTx, categories }: Props) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <Label>Kwota</Label>
+              <div className="flex items-center justify-between">
+                <Label>Kwota {form.vatRate !== "none" ? (amountMode === "net" ? "(netto)" : "(brutto)") : ""}</Label>
+                {form.vatRate !== "none" && (
+                  <button
+                    type="button"
+                    onClick={toggleAmountMode}
+                    className="text-[10px] uppercase tracking-wide text-primary hover:underline"
+                  >
+                    {amountMode === "net" ? "Wpisz brutto" : "Wpisz netto"}
+                  </button>
+                )}
+              </div>
               <Input
                 type="number"
                 step="0.01"
@@ -299,7 +365,7 @@ export function TransactionForm({ open, onClose, editTx, categories }: Props) {
                 required
                 placeholder="0,00"
                 value={form.amount}
-                onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+                onChange={(e) => handleAmountChange(e.target.value)}
               />
             </div>
             <div className="space-y-1">
@@ -311,6 +377,38 @@ export function TransactionForm({ open, onClose, editTx, categories }: Props) {
                 onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
               />
             </div>
+          </div>
+
+          {/* Stawka VAT */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label>Stawka VAT</Label>
+              <Select value={form.vatRate} onValueChange={handleVatRateChange}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {VAT_RATES.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            {form.vatRate !== "none" && form.amountNet && (
+              <div className="space-y-1">
+                <Label className="text-muted-foreground">Podsumowanie VAT</Label>
+                <div className="text-xs space-y-0.5 pt-2" style={{ color: "var(--text-2)" }}>
+                  <div className="flex justify-between">
+                    <span>Netto:</span>
+                    <span style={{ fontFamily: "var(--font-mono)" }}>{parseFloat(form.amountNet).toLocaleString("pl-PL", { minimumFractionDigits: 2 })} {form.currency}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>VAT ({form.vatRate === "-1" ? "ZW" : form.vatRate + "%"}):</span>
+                    <span style={{ fontFamily: "var(--font-mono)" }}>{parseFloat(form.vatAmount || "0").toLocaleString("pl-PL", { minimumFractionDigits: 2 })} {form.currency}</span>
+                  </div>
+                  <div className="flex justify-between font-medium" style={{ color: "var(--text-1)" }}>
+                    <span>Brutto:</span>
+                    <span style={{ fontFamily: "var(--font-mono)" }}>{parseFloat(form.amountGross).toLocaleString("pl-PL", { minimumFractionDigits: 2 })} {form.currency}</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Waluta */}

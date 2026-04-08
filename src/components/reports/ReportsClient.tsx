@@ -1,5 +1,4 @@
 "use client";
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,35 +15,20 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-
-interface MonthlyData {
-  [month: string]: { income: number; expense: number; profit: number };
-}
-
-interface CategoryData {
-  categoryId: string;
-  name: string;
-  color: string;
-  emoji: string;
-  type: string;
-  total: number;
-}
+import { useVaultMonthly, useVaultByCategory } from "@/hooks/useVaultTransactions";
+import { PageWrapper } from "@/components/layout/PageWrapper";
+import { PDFReportDialog } from "./PDFReportDialog";
+import { FileText } from "lucide-react";
 
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
 export function ReportsClient() {
   const [year, setYear] = useState(currentYear);
+  const [pdfOpen, setPdfOpen] = useState(false);
 
-  const { data: monthly, isLoading: monthlyLoading } = useQuery<MonthlyData>({
-    queryKey: ["reports-monthly", year],
-    queryFn: () => fetch(`/api/reports/monthly?year=${year}`).then((r) => r.json()),
-  });
-
-  const { data: byCategory, isLoading: catLoading } = useQuery<CategoryData[]>({
-    queryKey: ["reports-category", year],
-    queryFn: () => fetch(`/api/reports/category?year=${year}`).then((r) => r.json()),
-  });
+  const { data: monthly, isLoading: monthlyLoading } = useVaultMonthly(year);
+  const { data: byCategory, isLoading: catLoading } = useVaultByCategory(year);
 
   const monthlyChartData = monthly
     ? Object.entries(monthly).map(([m, d]) => ({ label: monthLabel(m), ...d }))
@@ -68,18 +52,19 @@ export function ReportsClient() {
   const handleJpkExport = () => {
     const now = new Date();
     const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-    const m = window.prompt("JPK — podaj miesiąc (YYYY-MM):", month);
+    const m = window.prompt("JPK — podaj miesiac (YYYY-MM):", month);
     if (m && /^\d{4}-\d{2}$/.test(m)) {
       window.location.href = `/api/reports/jpk?month=${m}`;
     } else if (m) {
-      alert("Nieprawidłowy format miesiąca. Użyj YYYY-MM, np. 2026-04");
+      alert("Nieprawidlowy format miesiaca. Uzyj YYYY-MM, np. 2026-04");
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Raporty</h1>
+    <PageWrapper
+      title="Raporty"
+      maxWidth="xl"
+      actions={
         <div className="flex items-center gap-2">
           <select
             value={year}
@@ -88,6 +73,10 @@ export function ReportsClient() {
           >
             {years.map((y) => <option key={y} value={y}>{y}</option>)}
           </select>
+          <Button variant="outline" size="sm" onClick={() => setPdfOpen(true)}>
+            <FileText className="h-4 w-4 mr-2" />
+            Raport PDF
+          </Button>
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="h-4 w-4 mr-2" />
             Eksport CSV
@@ -97,11 +86,11 @@ export function ReportsClient() {
             Eksport JPK
           </Button>
         </div>
-      </div>
-
+      }
+    >
       {/* Annual summary */}
       {totals && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { label: "Przychody", value: totals.income, color: "text-green-600 dark:text-green-400" },
             { label: "Wydatki", value: totals.expense, color: "text-red-600 dark:text-red-400" },
@@ -119,7 +108,7 @@ export function ReportsClient() {
 
       <Tabs defaultValue="monthly">
         <TabsList>
-          <TabsTrigger value="monthly">Miesięczne</TabsTrigger>
+          <TabsTrigger value="monthly">Miesieczne</TabsTrigger>
           <TabsTrigger value="category">Per kategoria</TabsTrigger>
         </TabsList>
 
@@ -145,14 +134,13 @@ export function ReportsClient() {
             </CardContent>
           </Card>
 
-          {/* Monthly table */}
           <Card>
             <CardContent className="pt-4">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-2 font-medium">Miesiąc</th>
+                      <th className="text-left py-2 font-medium">Miesiac</th>
                       <th className="text-right py-2 font-medium text-green-600">Przychody</th>
                       <th className="text-right py-2 font-medium text-red-600">Wydatki</th>
                       <th className="text-right py-2 font-medium">Zysk</th>
@@ -195,15 +183,15 @@ export function ReportsClient() {
                   {byCategory.map((c) => {
                     const maxVal = byCategory[0]?.total ?? 1;
                     return (
-                      <div key={c.categoryId} className="space-y-1">
+                      <div key={c.category} className="space-y-1">
                         <div className="flex items-center justify-between text-sm">
-                          <span style={{ color: c.color }}>{c.emoji} {c.name}</span>
+                          <span>{c.category}</span>
                           <span className="font-medium">{formatCurrency(c.total)}</span>
                         </div>
                         <div className="h-2 bg-secondary rounded-full overflow-hidden">
                           <div
-                            className="h-full rounded-full"
-                            style={{ width: `${(c.total / maxVal) * 100}%`, backgroundColor: c.color }}
+                            className="h-full rounded-full bg-primary"
+                            style={{ width: `${(c.total / maxVal) * 100}%` }}
                           />
                         </div>
                       </div>
@@ -215,6 +203,8 @@ export function ReportsClient() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+
+      <PDFReportDialog open={pdfOpen} onClose={() => setPdfOpen(false)} />
+    </PageWrapper>
   );
 }

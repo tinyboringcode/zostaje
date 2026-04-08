@@ -284,4 +284,38 @@
   .row-interactive:hover {
     background: var(--surface);
   }
+
+  /* ── Responsive helpers ─────────────────────────────────────────────────── */
+
+  /* Mobile-first main content padding */
+  @media (max-width: 767px) {
+    main {
+      padding: 16px 12px 80px !important;
+    }
+  }
+
+  /* Responsive table → cards on mobile */
+  @media (max-width: 639px) {
+    .responsive-table thead {
+      display: none;
+    }
+    .responsive-table tbody tr {
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      gap: 4px;
+    }
+    .responsive-table tbody td {
+      padding: 2px 0 !important;
+      text-align: left !important;
+    }
+  }
+
+  /* Touch-friendly tap targets */
+  @media (pointer: coarse) {
+    button, a, [role="button"] {
+      min-height: 40px;
+    }
+  }
 }

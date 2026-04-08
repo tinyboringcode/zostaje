@@ -1,32 +1,32 @@
 "use client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { TransactionForm } from "./TransactionForm";
 import { CSVImportDialog } from "./CSVImportDialog";
 import { MonthLocker } from "./MonthLocker";
 import { Pencil, Trash2, Search, ChevronUp, ChevronDown, Plus, Upload, AlertTriangle } from "lucide-react";
-import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, startOfQuarter, startOfYear, subMonths } from "date-fns";
+import {
+  useVaultTransactions,
+  useVaultDeleteTransaction,
+  useVaultBulkDelete,
+} from "@/hooks/useVaultTransactions";
+import { formatCurrency } from "@/lib/formatters";
+import type { StoredTx, TxFilters } from "@/lib/vault-queries";
+import { PageWrapper } from "@/components/layout/PageWrapper";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-interface Category { id: string; name: string; color: string; emoji: string; type: string; }
-interface Transaction {
-  id: string; amount: number; date: string; description: string;
-  contractor: string | null; contractorId: string | null; invoiceId: string | null;
-  type: "INCOME" | "EXPENSE"; category: Category;
-}
 type SortField = "date" | "amount" | "description";
 type PeriodPreset = "month" | "prev_month" | "quarter" | "year" | "custom" | "all";
 
 // ── Period helpers ─────────────────────────────────────────────────────────
 
 const PERIOD_LABELS: Record<PeriodPreset, string> = {
-  month: "Ten miesiąc",
-  prev_month: "Poprzedni miesiąc",
-  quarter: "Ten kwartał",
+  month: "Ten miesiac",
+  prev_month: "Poprzedni miesiac",
+  quarter: "Ten kwartal",
   year: "Ten rok",
-  custom: "Własny zakres",
+  custom: "Wlasny zakres",
   all: "Wszystkie",
 };
 
@@ -60,8 +60,8 @@ function formatTxDate(d: string) {
     : `${dd}.${mm}.${String(date.getFullYear()).slice(2)}`;
 }
 
-function fmtPLN(n: number) {
-  return n.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " zł";
+function fmtPLN(n: number, currency = "PLN") {
+  return formatCurrency(n, currency);
 }
 
 // ── Bulk delete modal ──────────────────────────────────────────────────────
@@ -81,28 +81,27 @@ function BulkDeleteModal({
 
       <div style={{ position: "relative", background: "var(--bg)", border: "1px solid var(--border)", borderRadius: 4, maxWidth: 460, width: "100%", padding: 28, boxShadow: "0 4px 24px rgba(0,0,0,0.10)" }}>
 
-        {/* Icon + title */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <div style={{ width: 32, height: 32, borderRadius: 4, background: "color-mix(in srgb, var(--red) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--red) 20%, transparent)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <AlertTriangle size={15} style={{ color: "var(--red)" }} />
           </div>
           <span style={{ fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 500, color: "var(--text-1)" }}>
-            Usuń transakcje
+            Usun transakcje
           </span>
         </div>
 
         {step === 1 && (
           <>
             <p style={{ fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--text-2)", lineHeight: 1.6, margin: "0 0 12px" }}>
-              Zamierzasz usunąć <strong style={{ color: "var(--text-1)" }}>{count}</strong> transakcji
+              Zamierzasz usunac <strong style={{ color: "var(--text-1)" }}>{count}</strong> transakcji
               {periodLabel !== "Wszystkie" && <> z okresu <strong style={{ color: "var(--text-1)" }}>{periodLabel.toLowerCase()}</strong></>}.
             </p>
             <p style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "var(--red)", margin: "0 0 24px" }}>
-              Ta operacja jest nieodwracalna. Usuniętych danych nie można przywrócić.
+              Ta operacja jest nieodwracalna. Usunietych danych nie mozna przywrocic.
             </p>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
               <button onClick={onCancel} style={btnStyle("ghost")}>Anuluj</button>
-              <button onClick={() => setStep(2)} style={btnStyle("danger-outline")}>Rozumiem, dalej →</button>
+              <button onClick={() => setStep(2)} style={btnStyle("danger-outline")}>Rozumiem, dalej</button>
             </div>
           </>
         )}
@@ -110,16 +109,16 @@ function BulkDeleteModal({
         {step === 2 && (
           <>
             <p style={{ fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--text-2)", lineHeight: 1.6, margin: "0 0 16px" }}>
-              Wpisz <strong style={{ fontFamily: "var(--font-mono)", color: "var(--text-1)" }}>USUŃ</strong> aby potwierdzić:
+              Wpisz <strong style={{ fontFamily: "var(--font-mono)", color: "var(--text-1)" }}>USUN</strong> aby potwierdzic:
             </p>
             <input
               autoFocus
               value={typed}
               onChange={(e) => setTyped(e.target.value)}
-              placeholder="USUŃ"
+              placeholder="USUN"
               style={{
                 width: "100%", padding: "10px 12px", fontFamily: "var(--font-mono)", fontSize: 15,
-                background: "var(--surface)", border: `1px solid ${typed === "USUŃ" ? "var(--red)" : "var(--border)"}`,
+                background: "var(--surface)", border: `1px solid ${typed === "USUN" ? "var(--red)" : "var(--border)"}`,
                 borderRadius: 4, outline: "none", color: "var(--text-1)", marginBottom: 20,
               }}
             />
@@ -127,10 +126,10 @@ function BulkDeleteModal({
               <button onClick={onCancel} style={btnStyle("ghost")}>Anuluj</button>
               <button
                 onClick={onConfirm}
-                disabled={typed !== "USUŃ" || isPending}
-                style={btnStyle("danger", typed !== "USUŃ" || isPending)}
+                disabled={typed !== "USUN" || isPending}
+                style={btnStyle("danger", typed !== "USUN" || isPending)}
               >
-                {isPending ? "Usuwam..." : `Usuń ${count} transakcji`}
+                {isPending ? "Usuwam..." : `Usun ${count} transakcji`}
               </button>
             </div>
           </>
@@ -150,18 +149,15 @@ function btnStyle(variant: "ghost" | "danger" | "danger-outline", disabled = fal
     return { ...base, background: "transparent", borderColor: "var(--border)", color: "var(--text-2)" };
   if (variant === "danger-outline")
     return { ...base, background: "transparent", borderColor: "var(--red)", color: "var(--red)" };
-  // danger fill
   return { ...base, background: "var(--red)", borderColor: "var(--red)", color: "#fff" };
 }
 
 // ── Main component ─────────────────────────────────────────────────────────
 
 export function TransactionsClient() {
-  const qc = useQueryClient();
-
   // Filters
   const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState("ALL");
+  const [typeFilter, setTypeFilter] = useState<"ALL" | "przychod" | "wydatek">("ALL");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [sortBy, setSortBy] = useState<SortField>("date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -175,68 +171,37 @@ export function TransactionsClient() {
   const { from, to } = getPeriodDates(period, customFrom, customTo);
 
   // Modals
-  const [editTx, setEditTx] = useState<Transaction | null>(null);
+  const [editTx, setEditTx] = useState<StoredTx | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [csvOpen, setCsvOpen] = useState(false);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
-  // Query params
-  const params = useMemo(() => {
-    const p = new URLSearchParams();
-    if (search) p.set("search", search);
-    if (typeFilter !== "ALL") p.set("type", typeFilter);
-    if (categoryFilter !== "ALL") p.set("categoryId", categoryFilter);
-    if (from) p.set("from", from);
-    if (to) p.set("to", to + "T23:59:59");
-    p.set("sortBy", sortBy);
-    p.set("sortDir", sortDir);
-    p.set("page", String(page));
-    p.set("limit", String(PAGE_SIZE));
-    return p;
-  }, [search, typeFilter, categoryFilter, from, to, sortBy, sortDir, page]);
+  // Vault-backed queries
+  const filters: TxFilters = useMemo(() => ({
+    search: search || undefined,
+    type: typeFilter !== "ALL" ? typeFilter : undefined,
+    category: categoryFilter !== "ALL" ? categoryFilter : undefined,
+    from: from || undefined,
+    to: to || undefined,
+    sortBy,
+    sortDir,
+    page,
+    pageSize: PAGE_SIZE,
+  }), [search, typeFilter, categoryFilter, from, to, sortBy, sortDir, page]);
 
-  const { data, isLoading } = useQuery<{ items: Transaction[]; total: number }>({
-    queryKey: ["transactions", params.toString()],
-    queryFn: () => fetch(`/api/transactions?${params}`).then((r) => r.json()),
-  });
+  const { data, isLoading, allTxs } = useVaultTransactions(filters);
+  const deleteMutation = useVaultDeleteTransaction();
+  const bulkDeleteMutation = useVaultBulkDelete();
 
-  const { data: categories } = useQuery<Category[]>({
-    queryKey: ["categories"],
-    queryFn: () => fetch("/api/categories").then((r) => r.json()),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) =>
-      fetch(`/api/transactions/${id}`, { method: "DELETE" }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["transactions"] });
-      qc.invalidateQueries({ queryKey: ["widgets"] });
-      toast.success("Transakcja usunięta");
-    },
-  });
-
-  const bulkDeleteMutation = useMutation({
-    mutationFn: () =>
-      fetch("/api/transactions", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          scope: period === "all" && typeFilter === "ALL" && categoryFilter === "ALL" ? "all" : "filtered",
-          from: from || undefined,
-          to: to || undefined,
-          type: typeFilter !== "ALL" ? typeFilter : undefined,
-          categoryId: categoryFilter !== "ALL" ? categoryFilter : undefined,
-        }),
-      }).then((r) => r.json()),
-    onSuccess: (result: { deleted: number }) => {
-      qc.invalidateQueries({ queryKey: ["transactions"] });
-      qc.invalidateQueries({ queryKey: ["widgets"] });
-      setBulkDeleteOpen(false);
-      toast.success(`Usunięto ${result.deleted} transakcji`);
-      setPage(1);
-    },
-    onError: () => toast.error("Błąd usuwania"),
-  });
+  // Get unique categories from all transactions
+  const categories = useMemo(() => {
+    if (!allTxs) return [];
+    const cats = new Set<string>();
+    for (const tx of allTxs) {
+      if (tx.data.category) cats.add(tx.data.category);
+    }
+    return Array.from(cats).sort();
+  }, [allTxs]);
 
   const toggleSort = (field: SortField) => {
     if (sortBy === field) setSortDir(sortDir === "asc" ? "desc" : "asc");
@@ -244,11 +209,25 @@ export function TransactionsClient() {
     setPage(1);
   };
 
-  const totalPages = data ? Math.ceil(data.total / PAGE_SIZE) : 1;
+  const totalPages = Math.max(1, Math.ceil(data.total / PAGE_SIZE));
 
-  // Summary of current view
-  const viewIncome = data?.items.filter((t) => t.type === "INCOME").reduce((s, t) => s + t.amount, 0) ?? 0;
-  const viewExpense = data?.items.filter((t) => t.type === "EXPENSE").reduce((s, t) => s + t.amount, 0) ?? 0;
+  const viewIncome = data.items.filter((t) => t.data.type === "przychod").reduce((s, t) => s + Math.abs(t.data.amount), 0);
+  const viewExpense = data.items.filter((t) => t.data.type === "wydatek").reduce((s, t) => s + Math.abs(t.data.amount), 0);
+
+  const handleBulkDelete = () => {
+    // Get all IDs matching current filters (without pagination)
+    if (!allTxs) return;
+    const allFiltered = allTxs.filter((t) => {
+      if (typeFilter !== "ALL" && t.data.type !== typeFilter) return false;
+      if (categoryFilter !== "ALL" && t.data.category !== categoryFilter) return false;
+      if (from && t.data.date < from) return false;
+      if (to && t.data.date > to) return false;
+      return true;
+    });
+    bulkDeleteMutation.mutate(allFiltered.map((t) => t.id), {
+      onSuccess: () => { setBulkDeleteOpen(false); setPage(1); },
+    });
+  };
 
   // ── Column header helper ────────────────────────────────────────────────
 
@@ -275,19 +254,13 @@ export function TransactionsClient() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 960 }}>
-
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <h1 style={{ margin: 0, fontFamily: "var(--font-sans)", fontSize: 18, fontWeight: 500, color: "var(--text-1)" }}>
-          Transakcje
-        </h1>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <MonthLocker />
-          <Btn icon={<Upload size={13} />} label="Import CSV" onClick={() => setCsvOpen(true)} />
-          <Btn icon={<Plus size={13} />} label="Dodaj" onClick={() => { setEditTx(null); setFormOpen(true); }} primary />
-        </div>
+    <PageWrapper title="Transakcje" maxWidth="xl" actions={
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <MonthLocker />
+        <Btn icon={<Upload size={13} />} label="Import CSV" onClick={() => setCsvOpen(true)} />
+        <Btn icon={<Plus size={13} />} label="Dodaj" onClick={() => { setEditTx(null); setFormOpen(true); }} primary />
       </div>
+    }>
 
       {/* ── Period selector ─────────────────────────────────────────────────── */}
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
@@ -320,7 +293,6 @@ export function TransactionsClient() {
 
       {/* ── Filters row ──────────────────────────────────────────────────────── */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-        {/* Search */}
         <div style={{ position: "relative", flex: "1 1 200px", minWidth: 160 }}>
           <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-3)", pointerEvents: "none" }} />
           <input
@@ -331,47 +303,44 @@ export function TransactionsClient() {
           />
         </div>
 
-        {/* Type */}
-        <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }} style={filterInputStyle}>
+        <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value as typeof typeFilter); setPage(1); }} style={filterInputStyle}>
           <option value="ALL">Wszystkie typy</option>
-          <option value="INCOME">Przychody</option>
-          <option value="EXPENSE">Wydatki</option>
+          <option value="przychod">Przychody</option>
+          <option value="wydatek">Wydatki</option>
         </select>
 
-        {/* Category */}
         <select value={categoryFilter} onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }} style={{ ...filterInputStyle, maxWidth: 180 }}>
           <option value="ALL">Wszystkie kategorie</option>
-          {categories?.map((c) => (
-            <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>{c}</option>
           ))}
         </select>
 
         <div style={{ flex: 1 }} />
 
-        {/* Bulk delete */}
-        {(data?.total ?? 0) > 0 && (
+        {data.total > 0 && (
           <button
             onClick={() => setBulkDeleteOpen(true)}
             style={{ padding: "5px 12px", borderRadius: 4, border: "1px solid var(--border)", fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--red)", background: "transparent", cursor: "pointer", opacity: 0.7 }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; (e.currentTarget as HTMLElement).style.borderColor = "var(--red)"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.7"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}
           >
-            Usuń zaznaczone…
+            Usun zaznaczone...
           </button>
         )}
       </div>
 
       {/* ── Summary strip ────────────────────────────────────────────────────── */}
-      {data && data.total > 0 && (
+      {data.total > 0 && (
         <div style={{ display: "flex", gap: 20, alignItems: "center", padding: "8px 0", borderBottom: "1px solid var(--border)", fontFamily: "var(--font-mono)", fontSize: 12 }}>
           <span style={{ color: "var(--text-3)" }}>{data.total} transakcji</span>
           <span style={{ color: "var(--text-3)" }}>·</span>
           <span style={{ color: "var(--green)" }}>+{fmtPLN(viewIncome)}</span>
           <span style={{ color: "var(--text-3)" }}>·</span>
-          <span style={{ color: "var(--red)" }}>−{fmtPLN(viewExpense)}</span>
+          <span style={{ color: "var(--red)" }}>-{fmtPLN(viewExpense)}</span>
           <span style={{ color: "var(--text-3)" }}>·</span>
           <span style={{ color: (viewIncome - viewExpense) >= 0 ? "var(--green)" : "var(--red)" }}>
-            {(viewIncome - viewExpense) >= 0 ? "+" : "−"}{fmtPLN(Math.abs(viewIncome - viewExpense))}
+            {(viewIncome - viewExpense) >= 0 ? "+" : "-"}{fmtPLN(Math.abs(viewIncome - viewExpense))}
           </span>
         </div>
       )}
@@ -385,7 +354,6 @@ export function TransactionsClient() {
                 <ColHeader field="date" label="Data" />
                 <ColHeader field="description" label="Opis" />
                 <th style={thStyle}>Kategoria</th>
-                <th style={{ ...thStyle, display: "none" } /* hidden on mobile */}>Kontrahent</th>
                 <ColHeader field="amount" label="Kwota" align="right" />
                 <th style={{ ...thStyle, width: 64 }} />
               </tr>
@@ -394,14 +362,14 @@ export function TransactionsClient() {
               {isLoading
                 ? Array.from({ length: 8 }).map((_, i) => (
                     <tr key={i}>
-                      {Array.from({ length: 5 }).map((_, j) => (
+                      {Array.from({ length: 4 }).map((_, j) => (
                         <td key={j} style={{ padding: "10px 12px" }}>
-                          <div style={{ height: 14, background: "var(--surface)", borderRadius: 2, animation: "fade-in 1s ease infinite alternate" }} />
+                          <div style={{ height: 14, background: "var(--surface)", borderRadius: 2 }} />
                         </td>
                       ))}
                     </tr>
                   ))
-                : data?.items.length === 0
+                : data.items.length === 0
                 ? (
                   <tr>
                     <td colSpan={5} style={{ padding: "32px 12px", textAlign: "center", fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--text-3)" }}>
@@ -409,45 +377,48 @@ export function TransactionsClient() {
                     </td>
                   </tr>
                 )
-                : data?.items.map((tx) => (
-                  <tr
-                    key={tx.id}
-                    style={{ borderTop: "1px solid var(--border)" }}
-                    onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.background = "var(--surface)"}
-                    onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.background = "transparent"}
-                  >
-                    {/* Date */}
-                    <td style={{ padding: "9px 12px", fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-3)", whiteSpace: "nowrap" }}>
-                      {formatTxDate(tx.date)}
-                    </td>
-
-                    {/* Description */}
-                    <td style={{ padding: "9px 12px", fontSize: 13, color: "var(--text-1)", maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {tx.description}
-                      {tx.contractor && <span style={{ color: "var(--text-3)", fontSize: 11, marginLeft: 6 }}>{tx.contractor}</span>}
-                    </td>
-
-                    {/* Category */}
-                    <td style={{ padding: "9px 12px" }}>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, padding: "2px 7px", borderRadius: 2, background: "var(--surface2)", color: "var(--text-2)", fontFamily: "var(--font-sans)", whiteSpace: "nowrap" }}>
-                        {tx.category.emoji} {tx.category.name}
-                      </span>
-                    </td>
-
-                    {/* Amount */}
-                    <td style={{ padding: "9px 12px", textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 13, color: tx.type === "INCOME" ? "var(--green)" : "var(--red)", whiteSpace: "nowrap" }}>
-                      {tx.type === "INCOME" ? "+" : "−"}{fmtPLN(tx.amount)}
-                    </td>
-
-                    {/* Actions */}
-                    <td style={{ padding: "9px 8px" }}>
-                      <div style={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
-                        <IconBtn icon={<Pencil size={13} />} onClick={() => { setEditTx(tx); setFormOpen(true); }} />
-                        <IconBtn icon={<Trash2 size={13} />} onClick={() => deleteMutation.mutate(tx.id)} danger />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                : data.items.map((tx) => {
+                  const isIncome = tx.data.type === "przychod";
+                  const cur = tx.data.currency || "PLN";
+                  return (
+                    <tr
+                      key={tx.id}
+                      style={{ borderTop: "1px solid var(--border)" }}
+                      onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.background = "var(--surface)"}
+                      onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.background = "transparent"}
+                    >
+                      <td style={{ padding: "9px 12px", fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-3)", whiteSpace: "nowrap" }}>
+                        {formatTxDate(tx.data.date)}
+                      </td>
+                      <td style={{ padding: "9px 12px", fontSize: 13, color: "var(--text-1)", maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {tx.data.description}
+                      </td>
+                      <td style={{ padding: "9px 12px" }}>
+                        {tx.data.category && (
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, padding: "2px 7px", borderRadius: 2, background: "var(--surface2)", color: "var(--text-2)", fontFamily: "var(--font-sans)", whiteSpace: "nowrap" }}>
+                            {tx.data.category}
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: "9px 12px", textAlign: "right", whiteSpace: "nowrap" }}>
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: isIncome ? "var(--green)" : "var(--red)" }}>
+                          {isIncome ? "+" : "-"}{fmtPLN(Math.abs(tx.data.amount), cur)}
+                        </span>
+                        {tx.data.amount_net != null && tx.data.amount_gross != null && (
+                          <span style={{ display: "block", fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--text-3)", marginTop: 1 }}>
+                            netto {fmtPLN(tx.data.amount_net, cur)}
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: "9px 8px" }}>
+                        <div style={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
+                          <IconBtn icon={<Pencil size={13} />} onClick={() => { setEditTx(tx); setFormOpen(true); }} />
+                          <IconBtn icon={<Trash2 size={13} />} onClick={() => deleteMutation.mutate(tx.id)} danger />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
             </tbody>
           </table>
         </div>
@@ -456,37 +427,52 @@ export function TransactionsClient() {
       {/* ── Pagination ─────────────────────────────────────────────────────────── */}
       {totalPages > 1 && (
         <div style={{ display: "flex", gap: 6, alignItems: "center", justifyContent: "center" }}>
-          <PagBtn label="←" onClick={() => setPage((p) => p - 1)} disabled={page === 1} />
+          <PagBtn label="<" onClick={() => setPage((p) => p - 1)} disabled={page === 1} />
           {Array.from({ length: totalPages }, (_, i) => i + 1)
             .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
-            .reduce<(number | "…")[]>((acc, p, i, arr) => {
-              if (i > 0 && (p as number) - (arr[i - 1] as number) > 1) acc.push("…");
+            .reduce<(number | "...")[]>((acc, p, i, arr) => {
+              if (i > 0 && (p as number) - (arr[i - 1] as number) > 1) acc.push("...");
               acc.push(p);
               return acc;
             }, [])
             .map((p, i) =>
-              p === "…"
-                ? <span key={`e${i}`} style={{ padding: "0 4px", color: "var(--text-3)", fontFamily: "var(--font-mono)", fontSize: 12 }}>…</span>
+              p === "..."
+                ? <span key={`e${i}`} style={{ padding: "0 4px", color: "var(--text-3)", fontFamily: "var(--font-mono)", fontSize: 12 }}>...</span>
                 : <PagBtn key={p} label={String(p)} onClick={() => setPage(p as number)} active={p === page} />
             )}
-          <PagBtn label="→" onClick={() => setPage((p) => p + 1)} disabled={page === totalPages} />
+          <PagBtn label=">" onClick={() => setPage((p) => p + 1)} disabled={page === totalPages} />
         </div>
       )}
 
       {/* ── Bulk delete modal ─────────────────────────────────────────────────── */}
       {bulkDeleteOpen && (
         <BulkDeleteModal
-          count={data?.total ?? 0}
+          count={data.total}
           periodLabel={PERIOD_LABELS[period]}
           onCancel={() => setBulkDeleteOpen(false)}
-          onConfirm={() => bulkDeleteMutation.mutate()}
+          onConfirm={handleBulkDelete}
           isPending={bulkDeleteMutation.isPending}
         />
       )}
 
-      <TransactionForm open={formOpen} onClose={() => setFormOpen(false)} editTx={editTx} categories={categories ?? []} />
-      <CSVImportDialog open={csvOpen} onClose={() => setCsvOpen(false)} categories={categories ?? []} />
-    </div>
+      <TransactionForm
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        editTx={editTx ? {
+          id: editTx.id,
+          amount: editTx.data.amount,
+          date: editTx.data.date,
+          description: editTx.data.description,
+          contractor: null,
+          contractorId: editTx.data.kontrahent_id ?? null,
+          invoiceId: null,
+          type: editTx.data.type === "przychod" ? "INCOME" : "EXPENSE",
+          category: { id: editTx.data.category ?? "", name: editTx.data.category ?? "", emoji: "", color: "", type: editTx.data.type === "przychod" ? "INCOME" : "EXPENSE" },
+        } : null}
+        categories={[]}
+      />
+      <CSVImportDialog open={csvOpen} onClose={() => setCsvOpen(false)} categories={[]} />
+    </PageWrapper>
   );
 }
 

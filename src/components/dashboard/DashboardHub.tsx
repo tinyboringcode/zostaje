@@ -1,5 +1,4 @@
 "use client";
-import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import CountUp from "react-countup";
@@ -7,33 +6,11 @@ import {
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { IntroScreen } from "@/components/onboarding/IntroScreen";
-
-// ── Types ──────────────────────────────────────────────────────────────────
-
-interface WidgetData {
-  income: number;
-  expense: number;
-  profit: number;
-  netAfterTax: number;
-  totalMonthlyBurden: number;
-  daysToZus: number;
-  overdueCount: number;
-  overdueAmount: number;
-  pendingCount: number;
-  pendingAmount: number;
-  runway: number | null;
-}
-
-interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  amount: number;
-  type: "INCOME" | "EXPENSE";
-  category: { name: string; emoji: string };
-}
-
-type YearMonthData = Record<string, { income: number; expense: number; profit: number }>;
+import {
+  useVaultWidgets,
+  useVaultMonthly,
+  useVaultRecent,
+} from "@/hooks/useVaultTransactions";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -101,27 +78,11 @@ export function DashboardHub() {
 
   const clockDate = tick.toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
-  // ── Data queries ────────────────────────────────────────────────────────
+  // ── Data queries (vault-backed) ──────────────────────────────────────────
 
-  const { data: wd } = useQuery<WidgetData>({
-    queryKey: ["widgets", selectedMonth],
-    queryFn: () => fetch(`/api/widgets?month=${selectedMonth}`).then((r) => r.json()),
-    staleTime: 30_000,
-    enabled: viewMode === "month",
-  });
-
-  const { data: yearData } = useQuery<YearMonthData>({
-    queryKey: ["reports-monthly", selectedYear],
-    queryFn: () => fetch(`/api/reports/monthly?year=${selectedYear}`).then((r) => r.json()),
-    staleTime: 60_000,
-    enabled: viewMode === "year",
-  });
-
-  const { data: txData } = useQuery<{ items: Transaction[] }>({
-    queryKey: ["transactions", "recent"],
-    queryFn: () => fetch("/api/transactions?limit=6&sortBy=date&sortDir=desc").then((r) => r.json()),
-    staleTime: 30_000,
-  });
+  const { data: wd } = useVaultWidgets(selectedMonth);
+  const { data: yearData } = useVaultMonthly(selectedYear);
+  const { data: recentTxs } = useVaultRecent(6);
 
   // ── Derived values ──────────────────────────────────────────────────────
 
@@ -134,15 +95,24 @@ export function DashboardHub() {
   const income      = viewMode === "year" ? yearTotals.income  : (wd?.income ?? 0);
   const expense     = viewMode === "year" ? yearTotals.expense : (wd?.expense ?? 0);
   const profit      = viewMode === "year" ? yearTotals.profit  : (wd?.profit ?? 0);
-  const netAfterTax = viewMode === "year" ? yearTotals.profit  : (wd?.netAfterTax ?? profit);
-  const burden      = viewMode === "year" ? 0                  : (wd?.totalMonthlyBurden ?? 0);
-  const daysToZus   = wd?.daysToZus ?? 99;
-  const overdueCount   = wd?.overdueCount ?? 0;
-  const overdueAmount  = wd?.overdueAmount ?? 0;
-  const runway         = wd?.runway ?? null;
-  const pendingCount   = wd?.pendingCount ?? 0;
-  const pendingAmount  = wd?.pendingAmount ?? 0;
-  const transactions   = txData?.items ?? [];
+  const netAfterTax = profit; // TODO: compute from tax-calculator when settings available
+  const burden: number      = 0; // TODO: compute from ZUS/PIT
+  const daysToZus: number   = 99; // TODO: compute days until 20th
+  const overdueCount: number   = 0;
+  const overdueAmount: number  = 0;
+  const runway: number | null  = null;
+  const pendingCount: number   = 0;
+  const pendingAmount: number  = 0;
+
+  // Recent transactions from vault
+  const transactions = (recentTxs ?? []).map((tx) => ({
+    id: tx.id,
+    date: tx.data.date,
+    description: tx.data.description,
+    amount: tx.data.amount,
+    type: tx.data.type === "przychod" ? "INCOME" as const : "EXPENSE" as const,
+    category: { name: tx.data.category ?? "", emoji: "" },
+  }));
 
   const netColor = netAfterTax >= 0 ? "var(--green)" : "var(--red)";
   const hasAlert = viewMode === "month" && (overdueCount > 0 || daysToZus <= 5);

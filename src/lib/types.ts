@@ -8,17 +8,23 @@
 
 export type TransactionType = "przychod" | "wydatek";
 
+export type VatRate = 23 | 8 | 5 | 0 | -1; // -1 = ZW (zwolniony)
+
 export interface TransactionDraft {
   description: string;
   amount: number;
   type: TransactionType;
-  currency?: string;
+  currency?: string; // defaults to "PLN" in formatters
   date: string; // ISO date
   category?: string;
   kontrahent_id?: string;
   project_id?: string;
   tags?: string[];
   notes?: string;
+  amount_net?: number;
+  amount_gross?: number;
+  vat_rate?: VatRate;
+  vat_amount?: number;
 }
 
 // `id` / `updatedAt` live on the StoredEntity envelope, not here.

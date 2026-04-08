@@ -6,6 +6,7 @@ import { useState } from "react";
 import { VaultProvider } from "@/components/vault/VaultProvider";
 import { CommandPalette } from "@/components/vault/CommandPalette";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { SettingsModalProvider } from "@/components/settings/SettingsModal";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -19,9 +20,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <HeroUIProvider>
         <VaultProvider>
-          {children}
-          <CommandPalette />
-          <InstallPrompt />
+          <SettingsModalProvider>
+            {children}
+            <CommandPalette />
+            <InstallPrompt />
+          </SettingsModalProvider>
         </VaultProvider>
         <Toaster
           richColors
