@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   # ── Build & publish Docker image ─────────────────────────────────────────
@@ -169,3 +170,36 @@ jobs:
             artifacts/electron-linux/*.AppImage
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
+
+  # ── Deploy to VPS (Traefik) ───────────────────────────────────────────────
+  deploy:
+    name: Deploy to VPS
+    needs: docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy on VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /opt/zostaje
+
+            # Pull latest code
+            git pull origin main
+
+            # Write .env (overwrite on each deploy)
+            cat > .env <<'ENVEOF'
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+            DOMAIN=zostaje.demo.boringcode.com
+            PLAN=free
+            ENVEOF
+
+            # Rebuild and restart
+            docker compose build --no-cache
+            docker compose down --remove-orphans
+            docker compose up -d
+
+            # Cleanup dangling images
+            docker image prune -f

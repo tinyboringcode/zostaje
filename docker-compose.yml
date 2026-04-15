@@ -1,19 +1,26 @@
 services:
-  cashflow:
+  zostaje:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: cashflow-app
+    container_name: zostaje
     restart: unless-stopped
     environment:
-      DATABASE_URL: file:/data/finance.db
-      APP_PASSWORD: ${APP_PASSWORD:-}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me}
+      DATABASE_URL: file:/data/prod.db
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       NODE_ENV: production
+      PLAN: ${PLAN:-free}
     volumes:
-      - cashflow-data:/data
-    ports:
-      - "3000:3000"
+      - zostaje-data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.zostaje.rule=Host(`${DOMAIN:-zostaje.demo.boringcode.com}`)"
+      - "traefik.http.routers.zostaje.entrypoints=websecure"
+      - "traefik.http.routers.zostaje.tls=true"
+      - "traefik.http.routers.zostaje.tls.certresolver=letsencrypt"
+      - "traefik.http.services.zostaje.loadbalancer.server.port=3000"
+    networks:
+      - traefik-public
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
       interval: 30s
@@ -21,23 +28,10 @@ services:
       retries: 3
       start_period: 30s
 
-  # Uncomment below when deploying with Traefik on VPS:
-  # labels:
-  #   - "traefik.enable=true"
-  #   - "traefik.http.routers.cashflow.rule=Host(`${DOMAIN:-cashflow.localhost}`)"
-  #   - "traefik.http.routers.cashflow.entrypoints=websecure"
-  #   - "traefik.http.routers.cashflow.tls=true"
-  #   - "traefik.http.routers.cashflow.tls.certresolver=letsencrypt"
-  #   - "traefik.http.services.cashflow.loadbalancer.server.port=3000"
-  # networks:
-  #   - traefik-public
-  #   - default
-
 volumes:
-  cashflow-data:
+  zostaje-data:
     driver: local
 
-# Uncomment for Traefik on VPS:
-# networks:
-#   traefik-public:
-#     external: true
+networks:
+  traefik-public:
+    external: true
