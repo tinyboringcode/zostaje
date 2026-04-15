@@ -44,7 +44,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modul
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 
-# prisma CLI binary
+# prisma CLI + wasm files
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma/build ./node_modules/prisma/build
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 
 # tsx for seed script
