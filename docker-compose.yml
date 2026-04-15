@@ -20,7 +20,7 @@ services:
       - "traefik.http.routers.zostaje.tls.certresolver=letsencrypt"
       - "traefik.http.services.zostaje.loadbalancer.server.port=3000"
     networks:
-      - traefik-public
+      - proxy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
       interval: 30s
@@ -33,5 +33,5 @@ volumes:
     driver: local
 
 networks:
-  traefik-public:
+  proxy:
     external: true
