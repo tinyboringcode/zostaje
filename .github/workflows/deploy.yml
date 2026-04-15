@@ -13,12 +13,17 @@ jobs:
     name: Deploy to VPS
     runs-on: ubuntu-latest
     steps:
+      - name: Decode SSH key
+        run: |
+          echo "${{ secrets.VPS_SSH_KEY }}" | base64 -d > /tmp/deploy_key
+          chmod 600 /tmp/deploy_key
+
       - name: Deploy on VPS
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
+          key_path: /tmp/deploy_key
           debug: true
           script: |
             cd /srv/sites/zostaje
