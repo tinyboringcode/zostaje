@@ -1,12 +1,17 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/server/db";
+import { resolveUserId } from "@/server/session";
 
 export async function GET(req: NextRequest) {
+  const resolved = await resolveUserId(req);
+  if (resolved instanceof NextResponse) return resolved;
+  const { userId } = resolved;
+
   const { searchParams } = req.nextUrl;
   const month = searchParams.get("month"); // YYYY-MM
 
-  const where = month ? { month } : {};
+  const where = month ? { userId, month } : { userId };
 
   const budgets = await prisma.budget.findMany({
     where,
@@ -18,7 +23,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  const resolved = await resolveUserId(req);
+  if (resolved instanceof NextResponse) return resolved;
+  const { userId } = resolved;
+
+  const body = await req.json().catch(() => ({}));
   const { categoryId, month, limitAmount } = body;
 
   if (!categoryId || !month || !limitAmount) {
@@ -26,9 +35,9 @@ export async function POST(req: NextRequest) {
   }
 
   const budget = await prisma.budget.upsert({
-    where: { categoryId_month: { categoryId, month } },
+    where: { userId_categoryId_month: { userId, categoryId, month } },
     update: { limitAmount: parseFloat(limitAmount) },
-    create: { categoryId, month, limitAmount: parseFloat(limitAmount) },
+    create: { userId, categoryId, month, limitAmount: parseFloat(limitAmount) },
     include: { category: true },
   });
 

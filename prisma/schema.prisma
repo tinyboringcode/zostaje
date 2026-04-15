@@ -9,6 +9,7 @@ datasource db {
 
 model Category {
   id             String        @id @default(cuid())
+  userId         String        @default("default")
   name           String
   color          String        @default("#6366f1")
   emoji          String        @default("📁")
@@ -37,6 +38,7 @@ model CategoryRule {
 
 model Transaction {
   id            String    @id @default(cuid())
+  userId        String    @default("default")
   amount        Float
   date          DateTime
   description   String
@@ -58,17 +60,19 @@ model Transaction {
 
 model Budget {
   id          String   @id @default(cuid())
+  userId      String   @default("default")
   categoryId  String
   month       String   // format: YYYY-MM
   limitAmount Float
 
   category    Category @relation(fields: [categoryId], references: [id])
 
-  @@unique([categoryId, month])
+  @@unique([userId, categoryId, month])
 }
 
 model Contractor {
   id             String              @id @default(cuid())
+  userId         String              @default("default")
   name           String
   companyType    String              @default("other") // JDG | SpZoo | SA | Spk | SKA | other
   nip            String              @default("")
@@ -89,6 +93,7 @@ model Contractor {
 
 model ContractorInvoice {
   id           String     @id @default(cuid())
+  userId       String     @default("default")
   contractorId String
   number       String
   amount       Float
@@ -114,9 +119,12 @@ model ContractorInvoice {
 
 model LockedMonth {
   id       String   @id @default(cuid())
-  month    String   @unique // YYYY-MM
+  userId   String   @default("default")
+  month    String   // YYYY-MM
   lockedAt DateTime @default(now())
   note     String   @default("")
+
+  @@unique([userId, month])
 }
 
 model NotificationLog {

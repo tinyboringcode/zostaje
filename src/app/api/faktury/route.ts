@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/server/db";
+import { resolveUserId } from "@/server/session";
 
 // Generuje numer faktury z szablonu i licznika
 function generateInvoiceNumber(template: string, counter: number, date: Date): string {
@@ -25,12 +26,16 @@ function calcVatAmounts(gross: number, vatRate: number) {
 }
 
 export async function GET(req: NextRequest) {
+  const resolved = await resolveUserId(req);
+  if (resolved instanceof NextResponse) return resolved;
+  const { userId } = resolved;
+
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
   const month = searchParams.get("month");
   const contractorId = searchParams.get("contractorId");
 
-  const where: Record<string, unknown> = {};
+  const where: Record<string, unknown> = { userId };
   if (status && status !== "all") where.status = status;
   if (contractorId) where.contractorId = contractorId;
   if (month) {
@@ -50,11 +55,24 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const resolved = await resolveUserId(req);
+  if (resolved instanceof NextResponse) return resolved;
+  const { userId } = resolved;
+
   const body = await req.json().catch(() => ({}));
   const { contractorId, amount, dueDate, issueDate, vatRate, description, currency, notes, template } = body;
 
   if (!contractorId || !amount || !dueDate) {
     return NextResponse.json({ error: "Brak wymaganych pól: contractorId, amount, dueDate" }, { status: 400 });
+  }
+
+  // Verify the contractor belongs to this user
+  const contractor = await prisma.contractor.findUnique({
+    where: { id: contractorId },
+    select: { userId: true },
+  });
+  if (!contractor || contractor.userId !== userId) {
+    return NextResponse.json({ error: "Contractor not found" }, { status: 404 });
   }
 
   const settings = await prisma.settings.findUnique({ where: { id: 1 } });
@@ -71,6 +89,7 @@ export async function POST(req: NextRequest) {
   const [invoice] = await prisma.$transaction([
     prisma.contractorInvoice.create({
       data: {
+        userId,
         contractorId,
         number,
         amount: gross,

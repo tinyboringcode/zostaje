@@ -35,6 +35,7 @@ interface NavItem {
   href: string;
   label: string;
   icon: React.ElementType;
+  available?: boolean; // undefined/true = enabled, false = disabled (coming soon)
 }
 
 interface NavGroup {
@@ -42,6 +43,12 @@ interface NavGroup {
   label: string;
   items: NavItem[];
 }
+
+// Pages available in this release
+const AVAILABLE: Set<string> = new Set([
+  "/dashboard", "/transactions", "/faktury", "/contractors",
+  "/reports", "/podatki", "/budgets", "/categories", "/audit",
+]);
 
 const NAV_GROUPS: NavGroup[] = [
   {
@@ -84,7 +91,13 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/wiedza",      label: "Baza wiedzy",     icon: BookOpen },
     ],
   },
-];
+].map((group) => ({
+  ...group,
+  items: group.items.map((item) => ({
+    ...item,
+    available: AVAILABLE.has(item.href),
+  })),
+}));
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -103,10 +116,33 @@ function saveCollapsed(state: Record<string, boolean>) {
 // ── SidebarNavItem ───────────────────────────────────────────────────────
 
 function SidebarNavItem({
-  href, label, icon: Icon, open, active,
+  href, label, icon: Icon, open, active, available = true,
 }: {
-  href: string; label: string; icon: React.ElementType; open: boolean; active: boolean;
+  href: string; label: string; icon: React.ElementType; open: boolean; active: boolean; available?: boolean;
 }) {
+  if (!available) {
+    return (
+      <div
+        title="Funkcja niedostepna w tej wersji"
+        style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "6px 10px", borderRadius: 7,
+          color: "var(--text-3)",
+          overflow: "hidden", whiteSpace: "nowrap", minWidth: 0,
+          fontFamily: "var(--font-sans)",
+          opacity: 0.4,
+          cursor: "not-allowed",
+          userSelect: "none",
+        }}
+      >
+        <Icon size={16} style={{ flexShrink: 0 }} />
+        <span style={{ fontSize: 13, opacity: open ? 1 : 0, transition: "opacity 120ms ease", overflow: "hidden", flex: 1, minWidth: 0 }}>
+          {label}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <Link
       href={href}
@@ -194,6 +230,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 icon={item.icon}
                 open={open}
                 active={isActive(item.href)}
+                available={item.available}
               />
             ))}
           </div>

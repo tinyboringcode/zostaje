@@ -267,10 +267,11 @@ async function main() {
   for (const b of demoBudgets) {
     const categoryId = catId(b.cat);
     await prisma.budget.upsert({
-      where: { categoryId_month: { categoryId, month: currentMonth } },
+      where: { userId_categoryId_month: { userId: "default", categoryId, month: currentMonth } },
       update: { limitAmount: b.limit },
       create: {
         id: `demo-budget-${b.cat.toLowerCase().replace(/[^a-z]/g, "")}`,
+        userId: "default",
         categoryId,
         month: currentMonth,
         limitAmount: b.limit,

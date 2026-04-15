@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Pages available in this release — all others redirect to dashboard.
+const AVAILABLE_PAGES = new Set([
+  "/dashboard",
+  "/transactions",
+  "/faktury",
+  "/contractors",
+  "/reports",
+  "/podatki",
+  "/budgets",
+  "/categories",
+  "/audit",
+  "/settings",
+]);
+
 const ALWAYS_PUBLIC = [
   "/api/auth/login",
   "/api/auth/register",
@@ -107,6 +121,14 @@ export async function middleware(req: NextRequest) {
       return withSecurityHeaders(NextResponse.json({ error: "Nie zalogowano" }, { status: 401 }));
     }
     return withSecurityHeaders(NextResponse.redirect(new URL("/auth", req.url)));
+  }
+
+  // Block unavailable pages — redirect to dashboard.
+  if (!pathname.startsWith("/api") && !pathname.startsWith("/onboarding")) {
+    const topLevel = "/" + pathname.split("/")[1];
+    if (topLevel !== "/" && topLevel !== "" && !AVAILABLE_PAGES.has(topLevel) && !isPublic(pathname)) {
+      return withSecurityHeaders(NextResponse.redirect(new URL("/dashboard", req.url)));
+    }
   }
 
   // Onboarding check (page routes only)

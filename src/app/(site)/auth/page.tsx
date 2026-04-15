@@ -265,12 +265,10 @@ export default function AuthPage() {
         </p>
 
         <p style={{ textAlign: "center", fontSize: 11, color: "var(--text-3)", marginTop: 24 }}>
-          Wersja przeglądarkowa wymaga aktywnej subskrypcji.
-          <br />
           <Link href="/" style={{ color: "var(--text-2)", textDecoration: "underline" }}>
             Pobierz wersję desktopową
           </Link>{" "}
-          — za darmo, na zawsze.
+          — za darmo, dla większej prywatności.
         </p>
       </div>
     </div>

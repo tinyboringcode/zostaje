@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/server/db";
+import { resolveUserId } from "@/server/session";
 
 function calcVatAmounts(gross: number, vatRate: number) {
   if (vatRate < 0) return { netAmount: gross, vatAmount: 0 };
@@ -9,7 +10,11 @@ function calcVatAmounts(gross: number, vatRate: number) {
   return { netAmount: Math.round(net * 100) / 100, vatAmount: Math.round(vat * 100) / 100 };
 }
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const resolved = await resolveUserId(req);
+  if (resolved instanceof NextResponse) return resolved;
+  const { userId } = resolved;
+
   const invoice = await prisma.contractorInvoice.findUnique({
     where: { id: params.id },
     include: {
@@ -17,11 +22,25 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       transaction: { include: { category: true } },
     },
   });
-  if (!invoice) return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+  if (!invoice || invoice.userId !== userId) {
+    return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+  }
   return NextResponse.json(invoice);
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  const resolved = await resolveUserId(req);
+  if (resolved instanceof NextResponse) return resolved;
+  const { userId } = resolved;
+
+  const existing = await prisma.contractorInvoice.findUnique({
+    where: { id: params.id },
+    select: { userId: true },
+  });
+  if (!existing || existing.userId !== userId) {
+    return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+  }
+
   const body = await req.json().catch(() => ({}));
   const { amount, dueDate, issueDate, vatRate, description, currency, notes, status, template } = body;
 
@@ -54,7 +73,19 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   return NextResponse.json(invoice);
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const resolved = await resolveUserId(req);
+  if (resolved instanceof NextResponse) return resolved;
+  const { userId } = resolved;
+
+  const existing = await prisma.contractorInvoice.findUnique({
+    where: { id: params.id },
+    select: { userId: true },
+  });
+  if (!existing || existing.userId !== userId) {
+    return NextResponse.json({ error: "Nie znaleziono" }, { status: 404 });
+  }
+
   await prisma.contractorInvoice.delete({ where: { id: params.id } });
   return NextResponse.json({ ok: true });
 }

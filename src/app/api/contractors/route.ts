@@ -1,9 +1,15 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/server/db";
+import { resolveUserId } from "@/server/session";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const resolved = await resolveUserId(req);
+  if (resolved instanceof NextResponse) return resolved;
+  const { userId } = resolved;
+
   const contractors = await prisma.contractor.findMany({
+    where: { userId },
     orderBy: { name: "asc" },
     include: {
       invoices: {
@@ -24,11 +30,16 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  const resolved = await resolveUserId(req);
+  if (resolved instanceof NextResponse) return resolved;
+  const { userId } = resolved;
+
+  const body = await req.json().catch(() => ({}));
   if (!body.name) return NextResponse.json({ error: "Nazwa jest wymagana" }, { status: 400 });
 
   const contractor = await prisma.contractor.create({
     data: {
+      userId,
       name: body.name,
       companyType: body.companyType ?? "other",
       nip: body.nip ?? "",

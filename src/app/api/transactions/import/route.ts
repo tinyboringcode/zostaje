@@ -2,8 +2,13 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/server/db";
 import { parseCSV } from "@/lib/csv-parser";
+import { resolveUserId } from "@/server/session";
 
 export async function POST(req: NextRequest) {
+  const resolved = await resolveUserId(req);
+  if (resolved instanceof NextResponse) return resolved;
+  const { userId } = resolved;
+
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
   const defaultCategoryId = formData.get("categoryId") as string | null;
@@ -23,6 +28,7 @@ export async function POST(req: NextRequest) {
     parsed.map((tx) =>
       prisma.transaction.create({
         data: {
+          userId,
           amount: tx.amount,
           date: tx.date,
           description: tx.description,

@@ -2,8 +2,13 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/server/db";
 import { learnFromTransaction } from "@/server/categorizer";
+import { resolveUserId } from "@/server/session";
 
 export async function GET(req: NextRequest) {
+  const resolved = await resolveUserId(req);
+  if (resolved instanceof NextResponse) return resolved;
+  const { userId } = resolved;
+
   const { searchParams } = req.nextUrl;
   const type = searchParams.get("type");
   const categoryId = searchParams.get("categoryId");
@@ -15,7 +20,7 @@ export async function GET(req: NextRequest) {
   const page = parseInt(searchParams.get("page") ?? "1");
   const limit = parseInt(searchParams.get("limit") ?? "50");
 
-  const where: Record<string, unknown> = {};
+  const where: Record<string, unknown> = { userId };
   if (type) where.type = type;
   if (categoryId) where.categoryId = categoryId;
   if (from || to) {
@@ -47,6 +52,10 @@ export async function GET(req: NextRequest) {
 // DELETE /api/transactions — bulk delete
 // body: { scope: "filtered" | "all", from?: string, to?: string, type?: string, categoryId?: string }
 export async function DELETE(req: NextRequest) {
+  const resolved = await resolveUserId(req);
+  if (resolved instanceof NextResponse) return resolved;
+  const { userId } = resolved;
+
   const body = await req.json().catch(() => ({}));
   const { scope, from, to, type, categoryId } = body as {
     scope: "filtered" | "all";
@@ -56,7 +65,7 @@ export async function DELETE(req: NextRequest) {
     categoryId?: string;
   };
 
-  const where: Record<string, unknown> = {};
+  const where: Record<string, unknown> = { userId };
 
   if (scope === "filtered") {
     if (type) where.type = type;
@@ -72,14 +81,18 @@ export async function DELETE(req: NextRequest) {
       }
     }
   }
-  // scope === "all" → where stays empty → deletes everything
+  // scope === "all" → where has only userId → deletes all for this user
 
   const { count } = await prisma.transaction.deleteMany({ where });
   return NextResponse.json({ deleted: count });
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  const resolved = await resolveUserId(req);
+  if (resolved instanceof NextResponse) return resolved;
+  const { userId } = resolved;
+
+  const body = await req.json().catch(() => ({}));
   const { amount, date, description, contractor, type, categoryId, contractorId, invoiceId,
     currency, originalAmount, currencyRate } = body;
 
@@ -94,6 +107,7 @@ export async function POST(req: NextRequest) {
 
   const transaction = await prisma.transaction.create({
     data: {
+      userId,
       amount: amountPln,
       date: new Date(date),
       description,
